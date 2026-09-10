@@ -170,19 +170,9 @@ export const AuthPage: React.FC = () => {
       {/* Right Authentication Form Panel */}
       <div className="w-full lg:w-7/12 bg-slate-50 flex items-center justify-center p-6 sm:p-12 relative z-10 overflow-y-auto">
         <div className="max-w-md w-full my-auto space-y-6">
-          {/* Top Bar with Back Button & Mobile Logo */}
-          <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="inline-flex items-center space-x-1.5 text-xs font-extrabold text-slate-700 hover:text-teal-800 bg-white hover:bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs transition-all group"
-            >
-              <ChevronLeft className="w-4 h-4 text-teal-700 group-hover:-translate-x-0.5 transition-transform" />
-              <span>Back to Home</span>
-            </button>
-
-            {/* Mobile Brand Header */}
-            <div className="flex items-center space-x-2 lg:hidden cursor-pointer" onClick={() => navigate('/')}>
+          {/* Mobile Brand Header */}
+          <div className="flex items-center justify-end lg:hidden pb-2 border-b border-slate-200/80">
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
               <div className="w-8 h-8 rounded-xl bg-teal-700 flex items-center justify-center text-white font-bold shadow-md">
                 <Activity className="w-4 h-4" />
               </div>
