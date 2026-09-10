@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Activity,
   ArrowRight,
+  ChevronLeft,
   Heart,
   Mail,
   Lock,
@@ -114,7 +115,7 @@ export const AuthPage: React.FC = () => {
 
       {/* Left Branding & Live Clinical Preview Panel */}
       <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-slate-950 via-teal-950/90 to-slate-900 p-12 text-white flex-col justify-between relative z-10 border-r border-slate-800/80 backdrop-blur-xl">
-        {/* Header Logo */}
+        {/* Header Logo & Back Button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => navigate('/')}>
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center text-white font-bold shadow-lg shadow-teal-900/40 group-hover:scale-105 transition-all">
@@ -130,9 +131,18 @@ export const AuthPage: React.FC = () => {
               <div className="text-xs text-teal-300/80 font-medium">Longitudinal Clinical Intelligence</div>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 px-3.5 py-2 rounded-xl border border-white/15 backdrop-blur-md transition-all group"
+          >
+            <ChevronLeft className="w-4 h-4 text-teal-300 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Home</span>
+          </button>
         </div>
 
-        {/* Hero Narrative & Animated Telemetry Widget */}
+        {/* Hero Narrative */}
         <div className="space-y-8 my-auto">
           <div className="space-y-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs text-teal-200 font-semibold backdrop-blur-md">
@@ -159,17 +169,24 @@ export const AuthPage: React.FC = () => {
 
       {/* Right Authentication Form Panel */}
       <div className="w-full lg:w-7/12 bg-slate-50 flex items-center justify-center p-6 sm:p-12 relative z-10 overflow-y-auto">
-        <div className="max-w-md w-full my-auto space-y-7">
-          {/* Mobile Logo */}
-          <div className="flex items-center justify-between lg:hidden pb-3 border-b border-slate-200">
-            <div className="flex items-center space-x-2.5" onClick={() => navigate('/')}>
-              <div className="w-9 h-9 rounded-xl bg-teal-700 flex items-center justify-center text-white font-bold shadow-md">
-                <Activity className="w-5 h-5" />
+        <div className="max-w-md w-full my-auto space-y-6">
+          {/* Top Bar with Back Button & Mobile Logo */}
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="inline-flex items-center space-x-1.5 text-xs font-extrabold text-slate-700 hover:text-teal-800 bg-white hover:bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs transition-all group"
+            >
+              <ChevronLeft className="w-4 h-4 text-teal-700 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Back to Home</span>
+            </button>
+
+            {/* Mobile Brand Header */}
+            <div className="flex items-center space-x-2 lg:hidden cursor-pointer" onClick={() => navigate('/')}>
+              <div className="w-8 h-8 rounded-xl bg-teal-700 flex items-center justify-center text-white font-bold shadow-md">
+                <Activity className="w-4 h-4" />
               </div>
-              <div>
-                <div className="font-extrabold text-slate-900 text-base tracking-tight">LCIIS</div>
-                <div className="text-[10px] text-slate-500 font-medium">Clinical Monitoring System</div>
-              </div>
+              <div className="font-extrabold text-slate-900 text-sm tracking-tight">LCIIS</div>
             </div>
           </div>
 
