@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #ffffff;
+    --bg-gradient-soft: linear-gradient(135deg, #ffffff 0%, #f2fcf9 50%, #f2f9fc 100%);
+    --bg-card: #ffffff;
+    
+    --brand-navy: #102a43;
+    --brand-teal: #18a999;
+    --brand-green: #20b486;
+    --brand-mint: #eafbf7;
+    --brand-blue: #eef7fb;
+    
+    --slate-dark: #102a43;
+    --slate-body: #52606d;
+    --slate-muted: #718096;
+    --border-light: #e5e7eb;
+    
+    --status-stable: #20b486;
+    --status-monitor: #f59e0b;
+    --status-high: #f97316;
+    --status-critical: #ef4444;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--slate-body);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+/* Custom UI Polish & Clinical Styling */
+.bg-soft-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #f2fcf9 40%, #f2f9fc 100%);
+}
+
+.bg-clinical-hero {
+  background: radial-gradient(circle at 80% 20%, #eafbf7 0%, #ffffff 70%);
+}
+
+.card-clinical {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(16, 42, 67, 0.05), 0 1px 2px -1px rgba(16, 42, 67, 0.03);
+  transition: all 0.2s ease-in-out;
+}
+
+.card-clinical:hover {
+  box-shadow: 0 4px 12px -2px rgba(16, 42, 67, 0.08), 0 2px 6px -1px rgba(16, 42, 67, 0.04);
+}
+
+.card-highlighted {
+  border-color: #18a999;
+  box-shadow: 0 0 0 2px rgba(24, 169, 153, 0.15), 0 4px 12px rgba(24, 169, 153, 0.08);
+}
+
+/* Pulse indicator for live telemetry */
+@keyframes live-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(32, 180, 134, 0.7); }
+  70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 8px rgba(32, 180, 134, 0); }
+  100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(32, 180, 134, 0); }
+}
+
+.animate-live-pulse {
+  animation: live-pulse 2s infinite;
+}
+
+/* OLED Pocket Device Screen Mockup Styling */
+.oled-screen {
+  background-color: #0b0f19;
+  color: #38bdf8;
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8);
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
