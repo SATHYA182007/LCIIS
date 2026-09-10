@@ -6,7 +6,6 @@ import {
   Activity,
   ArrowRight,
   ChevronLeft,
-  Heart,
   Mail,
   Lock,
   User,

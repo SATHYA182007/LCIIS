@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import {
   Activity,
   ArrowRight,
@@ -13,16 +13,12 @@ import {
   Stethoscope,
   Cpu,
   Layers,
-  FileText,
   Brain,
   Zap,
-  BarChart3,
-  Clock,
   Radio,
   Lock,
   ChevronRight,
   AlertTriangle,
-  Database,
   Sliders
 } from 'lucide-react';
 
@@ -31,12 +27,12 @@ export const LandingPage: React.FC = () => {
   const [activeRoleTab, setActiveRoleTab] = useState<'doctor' | 'nurse' | 'laboratory' | 'admin'>('doctor');
 
   // Animation Variants
-  const fadeInUp = {
+  const fadeInUp: Variants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0, 0, 0.2, 1] } }
   };
 
-  const staggerContainer = {
+  const staggerContainer: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,

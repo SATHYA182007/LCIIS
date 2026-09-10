@@ -191,7 +191,7 @@ export const exportPatientPDF = (
           doc.addPage();
           y = 20;
         }
-        doc.text(`• [${safeFormatDate(rem.timestamp)}] Dr. ${rem.doctorName || 'Staff'}: ${rem.remarkText}`, 18, y);
+        doc.text(`• [${safeFormatDate(rem.timestamp)}] Dr. ${rem.doctorName || 'Staff'}: ${rem.remark}`, 18, y);
         y += 6;
       });
     }
@@ -227,16 +227,16 @@ export const exportPatientPDF = (
  */
 export const exportAlertsCSV = (alerts: Alert[] = []) => {
   try {
-    const headers = ['Alert ID', 'Patient ID', 'Severity', 'Category', 'Title', 'Description', 'Trigger Time', 'Status'];
+    const headers = ['Alert ID', 'Patient ID', 'Patient Name', 'Priority', 'Type', 'Summary', 'Trigger Time', 'Status'];
     const rows = alerts.map((a) => [
       a.id,
       a.patientId,
-      a.severity,
-      a.category,
-      `"${String(a.title || '').replace(/"/g, '""')}"`,
-      `"${String(a.description || '').replace(/"/g, '""')}"`,
-      safeFormatDate(a.triggeredAt, true),
-      a.isAcknowledged ? 'Acknowledged' : 'Active'
+      `"${String(a.patientName || '').replace(/"/g, '""')}"`,
+      a.priority,
+      a.type,
+      `"${String(a.summary || '').replace(/"/g, '""')}"`,
+      safeFormatDate(a.createdAt, true),
+      a.status
     ]);
 
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -256,14 +256,14 @@ export const exportInventoryCSV = (inventory: InventoryItem[] = []) => {
     const headers = ['Item ID', 'Item Name', 'Category', 'Current Stock', 'Min Threshold', 'Unit', 'Batch Number', 'Expiry Date', 'Status'];
     const rows = inventory.map((i) => [
       i.id,
-      `"${String(i.itemName || '').replace(/"/g, '""')}"`,
+      `"${String(i.name || '').replace(/"/g, '""')}"`,
       i.category,
-      i.currentStock,
-      i.minThreshold,
+      i.currentQuantity,
+      i.minimumStockLevel,
       i.unit,
       i.batchNumber,
       safeFormatDate(i.expiryDate),
-      i.currentStock <= i.minThreshold ? 'REORDER WARNING' : 'STABLE'
+      i.status
     ]);
 
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
