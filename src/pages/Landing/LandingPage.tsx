@@ -102,48 +102,48 @@ export const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none overflow-x-hidden">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans select-none overflow-x-hidden">
       {/* Background Ambient Glow Gradients */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-emerald-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-emerald-500/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-cyan-500/5 rounded-full blur-3xl" />
       </div>
 
       {/* Navigation Header */}
-      <header className="h-20 border-b border-slate-800/80 px-6 sm:px-12 flex items-center justify-between bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
+      <header className="h-20 border-b border-slate-200/80 px-6 sm:px-12 flex items-center justify-between bg-white/90 backdrop-blur-xl sticky top-0 z-50 shadow-xs">
         <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => navigate('/')}>
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-teal-900/40 group-hover:scale-105 transition-all">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-700 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-teal-900/10 group-hover:scale-105 transition-all">
             <Activity className="w-6 h-6" />
           </div>
           <div>
-            <div className="font-extrabold text-white text-lg tracking-tight flex items-center space-x-1.5">
+            <div className="font-extrabold text-slate-900 text-lg tracking-tight flex items-center space-x-1.5">
               <span>LCIIS</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 font-semibold uppercase tracking-wider">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 font-bold uppercase tracking-wider">
                 v2.4 Pro
               </span>
             </div>
-            <div className="text-xs text-teal-300/80 font-medium">Longitudinal Clinical Intelligence</div>
+            <div className="text-xs text-slate-500 font-medium">Longitudinal Clinical Intelligence</div>
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-8 text-xs font-bold text-slate-300">
-          <a href="#overview" className="hover:text-teal-400 transition-colors">OVERVIEW</a>
-          <a href="#engines" className="hover:text-teal-400 transition-colors">INTELLIGENCE ENGINES</a>
-          <a href="#workstations" className="hover:text-teal-400 transition-colors">HOSPITAL ROLES</a>
-          <a href="#hardware" className="hover:text-teal-400 transition-colors">HARDWARE & IoT</a>
+        <nav className="hidden md:flex items-center space-x-8 text-xs font-bold text-slate-600">
+          <a href="#overview" className="hover:text-teal-800 transition-colors">OVERVIEW</a>
+          <a href="#engines" className="hover:text-teal-800 transition-colors">INTELLIGENCE ENGINES</a>
+          <a href="#workstations" className="hover:text-teal-800 transition-colors">HOSPITAL ROLES</a>
+          <a href="#hardware" className="hover:text-teal-800 transition-colors">HARDWARE & IoT</a>
         </nav>
 
         <div className="flex items-center space-x-3">
           <button
             onClick={() => navigate('/auth')}
-            className="text-xs font-extrabold text-slate-300 hover:text-white px-4 py-2 rounded-xl transition-colors"
+            className="text-xs font-extrabold text-slate-700 hover:text-teal-800 px-4 py-2 rounded-xl transition-colors"
           >
             SIGN IN
           </button>
           <button
             onClick={() => navigate('/auth')}
-            className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-teal-900/40 transition-all flex items-center space-x-2"
+            className="bg-teal-700 hover:bg-teal-800 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl shadow-md shadow-teal-900/10 transition-all flex items-center space-x-2"
           >
             <span>GET STARTED</span>
             <ArrowRight className="w-4 h-4" />
@@ -159,35 +159,35 @@ export const LandingPage: React.FC = () => {
           variants={fadeInUp}
           className="space-y-6"
         >
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-extrabold backdrop-blur-md">
-            <Sparkles className="w-4 h-4 text-teal-400" />
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-teal-50 border border-teal-200/80 text-teal-800 text-xs font-extrabold shadow-2xs">
+            <Sparkles className="w-4 h-4 text-teal-700" />
             <span>GREENMINDS HEALTHCARE INTELLIGENCE PLATFORM</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl xl:text-7xl font-black text-white tracking-tight leading-tight max-w-5xl mx-auto">
+          <h1 className="text-4xl sm:text-6xl xl:text-7xl font-black text-slate-900 tracking-tight leading-tight max-w-5xl mx-auto">
             Don't Just View the Latest Result.{' '}
-            <span className="bg-gradient-to-r from-teal-400 via-emerald-300 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-teal-700 via-teal-800 to-emerald-700 bg-clip-text text-transparent">
               Understand the Clinical Trajectory.
             </span>
           </h1>
 
-          <p className="text-slate-300 text-base sm:text-xl max-w-3xl mx-auto leading-relaxed font-normal">
+          <p className="text-slate-600 text-base sm:text-xl max-w-3xl mx-auto leading-relaxed font-normal">
             LCIIS unifies EMR patient records, LIS serial lab trends, and real-time bedside telemetry streams into one explainable deterioration alert platform.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 pt-4">
             <button
               onClick={() => navigate('/auth')}
-              className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-extrabold text-sm px-8 py-4 rounded-2xl shadow-xl shadow-teal-950 transition-all flex items-center space-x-2"
+              className="bg-teal-700 hover:bg-teal-800 text-white font-extrabold text-sm px-8 py-4 rounded-2xl shadow-lg shadow-teal-900/15 transition-all flex items-center space-x-2"
             >
               <span>LAUNCH CLINICAL PORTAL</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => navigate('/simulation')}
-              className="bg-slate-900/90 border border-slate-700/80 hover:bg-slate-800 text-slate-200 font-extrabold text-sm px-8 py-4 rounded-2xl transition-all flex items-center space-x-2"
+              className="bg-slate-100 border border-slate-200 hover:bg-slate-200/80 text-slate-800 font-extrabold text-sm px-8 py-4 rounded-2xl transition-all flex items-center space-x-2"
             >
-              <Cpu className="w-4 h-4 text-teal-400" />
+              <Cpu className="w-4 h-4 text-teal-700" />
               <span>EXPLORE HARDWARE SIMULATION</span>
             </button>
           </div>
@@ -200,53 +200,53 @@ export const LandingPage: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="pt-6 max-w-4xl mx-auto"
         >
-          <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl text-left space-y-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xl text-left space-y-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center space-x-3">
-                  <h3 className="text-lg font-bold text-white">Eleanor Vance (P12345) — Bed 12</h3>
-                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold border border-slate-700">
+                  <h3 className="text-lg font-bold text-slate-900">Eleanor Vance (P12345) — Bed 12</h3>
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
                     ICU Unit A
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Attending Physician: Dr. Sarah Jenkins</p>
+                <p className="text-xs text-slate-500 mt-0.5">Attending Physician: Dr. Sarah Jenkins</p>
               </div>
 
               <div className="flex items-center space-x-2">
-                <span className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/40 animate-pulse">
+                <span className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200 animate-pulse">
                   HIGH RISK (72% ADVISORY)
                 </span>
               </div>
             </div>
 
             {/* What Changed Highlight Box */}
-            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between text-xs font-extrabold text-teal-300 tracking-wider uppercase">
+            <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
+              <div className="flex items-center justify-between text-xs font-extrabold text-teal-800 tracking-wider uppercase">
                 <span className="flex items-center">
-                  <Brain className="w-4 h-4 mr-1.5 text-teal-400" /> EXPLAINABLE AI ANALYSIS — WHY FLAGGED?
+                  <Brain className="w-4 h-4 mr-1.5 text-teal-700" /> EXPLAINABLE AI ANALYSIS — WHY FLAGGED?
                 </span>
                 <span className="text-slate-500 font-mono text-[10px]">Deterministic Pipeline</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-1">
-                  <div className="font-bold text-orange-400 flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs space-y-1">
+                  <div className="font-bold text-orange-700 flex items-center justify-between">
                     <span>Creatinine Upward Slope</span>
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <div className="text-slate-200 font-mono">0.9 → 1.0 → 1.1 → 1.3 mg/dL</div>
-                  <p className="text-[11px] text-slate-400">Gradual progression across serial lab draws</p>
+                  <div className="text-slate-900 font-mono font-bold">0.9 → 1.0 → 1.1 → 1.3 mg/dL</div>
+                  <p className="text-[11px] text-slate-500">Gradual progression across serial lab draws</p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-1">
-                  <div className="font-bold text-red-400 flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs space-y-1">
+                  <div className="font-bold text-red-700 flex items-center justify-between">
                     <span>SpO2 Hypoxemia Trend</span>
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <div className="text-slate-200 font-mono">98% → 95% → 92% (Low)</div>
-                  <p className="text-[11px] text-slate-400">Continuous bedside telemetry decline</p>
+                  <div className="text-slate-900 font-mono font-bold">98% → 95% → 92% (Low)</div>
+                  <p className="text-[11px] text-slate-500">Continuous bedside telemetry decline</p>
                 </div>
               </div>
             </div>
@@ -255,7 +255,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Core Clinical Problem vs Solution Grid (Scroll Animated) */}
-      <section className="py-20 bg-slate-900/60 border-y border-slate-800/80 relative z-10 px-6 sm:px-12">
+      <section className="py-20 bg-slate-50/80 border-y border-slate-200/80 relative z-10 px-6 sm:px-12">
         <div className="max-w-6xl mx-auto space-y-12">
           <motion.div
             initial="hidden"
@@ -264,9 +264,9 @@ export const LandingPage: React.FC = () => {
             variants={fadeInUp}
             className="text-center space-y-3 max-w-3xl mx-auto"
           >
-            <span className="text-xs font-extrabold text-teal-400 tracking-wider uppercase">CLINICAL PARADIGM SHIFT</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white">Why Point-in-Time Spot Checks Fail Patients</h2>
-            <p className="text-slate-400 text-sm sm:text-base">
+            <span className="text-xs font-extrabold text-teal-800 tracking-wider uppercase">CLINICAL PARADIGM SHIFT</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900">Why Point-in-Time Spot Checks Fail Patients</h2>
+            <p className="text-slate-600 text-sm sm:text-base">
               A lab test remaining strictly within standard reference limits can still represent dangerous clinical deterioration when evaluated over time.
             </p>
           </motion.div>
@@ -279,44 +279,44 @@ export const LandingPage: React.FC = () => {
             className="grid grid-cols-1 md:grid-cols-2 gap-8"
           >
             {/* The Problem */}
-            <motion.div variants={fadeInUp} className="p-8 rounded-3xl bg-slate-950 border border-red-900/40 space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 font-bold">
+            <motion.div variants={fadeInUp} className="p-8 rounded-3xl bg-white border border-red-200 shadow-md space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center text-red-700 font-bold">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white">Traditional Isolated Testing</h3>
-              <ul className="space-y-3 text-xs text-slate-300">
+              <h3 className="text-xl font-bold text-slate-900">Traditional Isolated Testing</h3>
+              <ul className="space-y-3 text-xs text-slate-700 font-medium">
                 <li className="flex items-start">
-                  <span className="text-red-400 mr-2 font-bold">✕</span>
+                  <span className="text-red-600 mr-2 font-bold">✕</span>
                   <span>Evaluates each test result as a disconnected single value.</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-red-400 mr-2 font-bold">✕</span>
+                  <span className="text-red-600 mr-2 font-bold">✕</span>
                   <span>Misses subtle velocity changes (dV/dt) when Creatinine shifts within range (0.9 → 1.3 mg/dL).</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-red-400 mr-2 font-bold">✕</span>
+                  <span className="text-red-600 mr-2 font-bold">✕</span>
                   <span>Treats telemetry, lab results, and nurse notes in separate siloed systems.</span>
                 </li>
               </ul>
             </motion.div>
 
             {/* The Solution */}
-            <motion.div variants={fadeInUp} className="p-8 rounded-3xl bg-slate-950 border border-teal-500/40 space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold">
+            <motion.div variants={fadeInUp} className="p-8 rounded-3xl bg-white border border-teal-200 shadow-md space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white">LCIIS Longitudinal Intelligence</h3>
-              <ul className="space-y-3 text-xs text-slate-300">
+              <h3 className="text-xl font-bold text-slate-900">LCIIS Longitudinal Intelligence</h3>
+              <ul className="space-y-3 text-xs text-slate-700 font-medium">
                 <li className="flex items-start">
-                  <span className="text-teal-400 mr-2 font-bold">✓</span>
+                  <span className="text-teal-700 mr-2 font-bold">✓</span>
                   <span>Tracks velocity, slope, persistence, and individualized patient baseline μ_patient.</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-teal-400 mr-2 font-bold">✓</span>
+                  <span className="text-teal-700 mr-2 font-bold">✓</span>
                   <span>Detects multi-system concurrent changes across lab draws and telemetry.</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-teal-400 mr-2 font-bold">✓</span>
+                  <span className="text-teal-700 mr-2 font-bold">✓</span>
                   <span>Provides plain-language "WHY" reasoning for every alert escalation.</span>
                 </li>
               </ul>
@@ -334,9 +334,9 @@ export const LandingPage: React.FC = () => {
           variants={fadeInUp}
           className="text-center space-y-3 max-w-3xl mx-auto"
         >
-          <span className="text-xs font-extrabold text-teal-400 tracking-wider uppercase">DETERMINISTIC PIPELINE</span>
-          <h2 className="text-3xl sm:text-4xl font-black text-white">5 Core Intelligence Engines</h2>
-          <p className="text-slate-400 text-sm sm:text-base">
+          <span className="text-xs font-extrabold text-teal-800 tracking-wider uppercase">DETERMINISTIC PIPELINE</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900">5 Core Intelligence Engines</h2>
+          <p className="text-slate-600 text-sm sm:text-base">
             Every alert is backed by explainable mathematical formulas and transparent state machine transitions.
           </p>
         </motion.div>
@@ -349,56 +349,56 @@ export const LandingPage: React.FC = () => {
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
           {/* Engine 1 */}
-          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group">
-            <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center font-bold">
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-white border border-slate-200 hover:border-teal-500/50 shadow-md shadow-slate-100 transition-all space-y-3 group">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
               <TrendingUp className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-teal-300 transition-colors">1. Trend Analysis Engine</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-800 transition-colors">1. Trend Analysis Engine</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               Calculates rate of change (dV/dt), directional regression slope, consecutive persistence across k measurements, and volatility.
             </p>
           </motion.div>
 
           {/* Engine 2 */}
-          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-white border border-slate-200 hover:border-teal-500/50 shadow-md shadow-slate-100 transition-all space-y-3 group">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
               <Zap className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">2. Anomaly Engine</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-800 transition-colors">2. Anomaly Engine</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               Detects statistical z-score outliers (≥ 2.5σ) and sudden range-relative jump spikes across physiological measurements.
             </p>
           </motion.div>
 
           {/* Engine 3 */}
-          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold">
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-white border border-slate-200 hover:border-teal-500/50 shadow-md shadow-slate-100 transition-all space-y-3 group">
+            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold">
               <Sliders className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-cyan-300 transition-colors">3. Multi-Factor Risk Aggregator</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900 group-hover:text-cyan-800 transition-colors">3. Multi-Factor Risk Aggregator</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               Combines rule-based scores, trend outputs, anomaly detections, and ML predictions into advisory risk bands (`STABLE` to `CRITICAL`).
             </p>
           </motion.div>
 
           {/* Engine 4 */}
-          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-white border border-slate-200 hover:border-teal-500/50 shadow-md shadow-slate-100 transition-all space-y-3 group">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold">
               <Layers className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-purple-300 transition-colors">4. Patient Status Engine</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-800 transition-colors">4. Patient Status Engine</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               Manages state transitions (`STABLE`, `MONITOR`, `HIGH RISK`, `CRITICAL`). Ensures missing telemetry data never triggers false deterioration alerts.
             </p>
           </motion.div>
 
           {/* Engine 5 */}
-          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group md:col-span-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-white border border-slate-200 hover:border-teal-500/50 shadow-md shadow-slate-100 transition-all space-y-3 group md:col-span-2">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
               <Brain className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">5. Explainable Reasoning Engine</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900 group-hover:text-amber-800 transition-colors">5. Explainable Reasoning Engine</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               Generates transparent, plain-language "WHY" explanations for clinicians detailing multi-parameter changes, time intervals, and risk contributions.
             </p>
           </motion.div>
@@ -406,7 +406,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 4 Tailored Hospital Workstations Showcase (Interactive Tabs) */}
-      <section id="workstations" className="py-20 bg-slate-900/60 border-y border-slate-800/80 relative z-10 px-6 sm:px-12">
+      <section id="workstations" className="py-20 bg-slate-50/80 border-y border-slate-200/80 relative z-10 px-6 sm:px-12">
         <div className="max-w-6xl mx-auto space-y-12">
           <motion.div
             initial="hidden"
@@ -415,15 +415,15 @@ export const LandingPage: React.FC = () => {
             variants={fadeInUp}
             className="text-center space-y-3 max-w-3xl mx-auto"
           >
-            <span className="text-xs font-extrabold text-teal-400 tracking-wider uppercase">ROLE-BASED WORKSPACES</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white">4 Dedicated Hospital User Roles</h2>
-            <p className="text-slate-400 text-sm sm:text-base">
+            <span className="text-xs font-extrabold text-teal-800 tracking-wider uppercase">ROLE-BASED WORKSPACES</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900">4 Dedicated Hospital User Roles</h2>
+            <p className="text-slate-600 text-sm sm:text-base">
               LCIIS routes healthcare personnel to custom, role-optimized clinical portals.
             </p>
           </motion.div>
 
           {/* Role Tabs */}
-          <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-slate-950 rounded-2xl border border-slate-800 max-w-3xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-slate-200/60 rounded-2xl border border-slate-300/70 max-w-3xl mx-auto">
             {(['doctor', 'nurse', 'laboratory', 'admin'] as const).map((roleKey) => {
               const r = roleDetails[roleKey];
               const IconComp = r.icon;
@@ -434,8 +434,8 @@ export const LandingPage: React.FC = () => {
                   onClick={() => setActiveRoleTab(roleKey)}
                   className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center space-x-2 ${
                     isActive
-                      ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-teal-900/40'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                      ? 'bg-teal-700 text-white shadow-md'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
                   <IconComp className="w-4 h-4" />
@@ -451,22 +451,22 @@ export const LandingPage: React.FC = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="p-8 rounded-3xl bg-slate-950 border border-slate-800 space-y-6"
+            className="p-8 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-6"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center font-bold">
+                <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
                   {React.createElement(roleDetails[activeRoleTab].icon, { className: 'w-6 h-6' })}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">{roleDetails[activeRoleTab].title}</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">{roleDetails[activeRoleTab].desc}</p>
+                  <h3 className="text-xl font-bold text-slate-900">{roleDetails[activeRoleTab].title}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">{roleDetails[activeRoleTab].desc}</p>
                 </div>
               </div>
 
               <button
                 onClick={() => navigate('/auth')}
-                className="self-start sm:self-center px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-extrabold rounded-xl transition-all flex items-center space-x-1.5"
+                className="self-start sm:self-center px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-extrabold rounded-xl transition-all flex items-center space-x-1.5 shadow-sm"
               >
                 <span>OPEN WORKSTATION</span>
                 <ChevronRight className="w-4 h-4" />
@@ -475,8 +475,8 @@ export const LandingPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {roleDetails[activeRoleTab].features.map((feat, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 flex items-center space-x-3 text-xs text-slate-200 font-medium">
-                  <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0" />
+                <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center space-x-3 text-xs text-slate-800 font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-teal-700 shrink-0" />
                   <span>{feat}</span>
                 </div>
               ))}
@@ -494,9 +494,9 @@ export const LandingPage: React.FC = () => {
           variants={fadeInUp}
           className="text-center space-y-3 max-w-3xl mx-auto"
         >
-          <span className="text-xs font-extrabold text-teal-400 tracking-wider uppercase">HARDWARE INTEGRATION</span>
-          <h2 className="text-3xl sm:text-4xl font-black text-white">ESP32 & Pocket Alert Dongle System</h2>
-          <p className="text-slate-400 text-sm sm:text-base">
+          <span className="text-xs font-extrabold text-teal-800 tracking-wider uppercase">HARDWARE INTEGRATION</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900">ESP32 & Pocket Alert Dongle System</h2>
+          <p className="text-slate-600 text-sm sm:text-base">
             End-to-end hardware telemetry streaming and pocket alert delivery devices for clinical staff.
           </p>
         </motion.div>
@@ -508,40 +508,40 @@ export const LandingPage: React.FC = () => {
           variants={staggerContainer}
           className="grid grid-cols-1 md:grid-cols-3 gap-8"
         >
-          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center font-bold">
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-white border border-slate-200 shadow-md space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
               <Cpu className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white">ESP32 Microcontroller Node</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900">ESP32 Microcontroller Node</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               Streams continuous bedside vitals JSON payloads (/liveVitals/patient_id) over Firebase Realtime Database with automatic Wi-Fi reconnect handling.
             </p>
           </motion.div>
 
-          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-white border border-slate-200 shadow-md space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
               <Radio className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white">Pocket Alert Hardware Dongle</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900">Pocket Alert Hardware Dongle</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               Portable healthcare staff device equipped with an OLED display, piezo buzzer alert tones, haptic vibration motor, and alert LEDs.
             </p>
           </motion.div>
 
-          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold">
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-white border border-slate-200 shadow-md space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold">
               <Sliders className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white">Interactive Scenario Simulator</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Built-in telemetry simulator (`/simulation`) streams clinical scenarios at 1x, 2x, 5x, and 10x speeds for training and validation.
+            <h3 className="text-base font-bold text-slate-900">Interactive Scenario Simulator</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              Built-in telemetry simulator (/simulation) streams clinical scenarios at 1x, 2x, 5x, and 10x speeds for training and validation.
             </p>
           </motion.div>
         </motion.div>
       </section>
 
       {/* Impact Numbers Banner */}
-      <section className="py-16 bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 border-y border-slate-800/80 relative z-10 px-6 sm:px-12">
+      <section className="py-16 bg-gradient-to-r from-teal-900 via-slate-900 to-teal-900 text-white relative z-10 px-6 sm:px-12 shadow-xl">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
             <div className="text-3xl sm:text-5xl font-black text-white">100%</div>
@@ -564,14 +564,14 @@ export const LandingPage: React.FC = () => {
 
       {/* Call To Action Banner */}
       <section className="py-20 px-6 sm:px-12 max-w-5xl mx-auto text-center space-y-6 relative z-10">
-        <h2 className="text-3xl sm:text-5xl font-black text-white">Ready to Experience Longitudinal Intelligence?</h2>
-        <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto">
+        <h2 className="text-3xl sm:text-5xl font-black text-slate-900">Ready to Experience Longitudinal Intelligence?</h2>
+        <p className="text-slate-600 text-sm sm:text-base max-w-2xl mx-auto">
           Explore the clinical portals or test the real-time hardware telemetry simulation engine.
         </p>
         <div className="flex flex-wrap justify-center gap-4 pt-4">
           <button
             onClick={() => navigate('/auth')}
-            className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-extrabold text-sm px-8 py-4 rounded-2xl shadow-xl shadow-teal-950 transition-all flex items-center space-x-2"
+            className="bg-teal-700 hover:bg-teal-800 text-white font-extrabold text-sm px-8 py-4 rounded-2xl shadow-xl shadow-teal-900/10 transition-all flex items-center space-x-2"
           >
             <span>SIGN IN TO PORTAL</span>
             <ArrowRight className="w-4 h-4" />
@@ -580,7 +580,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Clinical & Synthetic Disclaimer Footer */}
-      <footer className="mt-auto bg-slate-950 text-slate-400 py-10 px-6 sm:px-12 border-t border-slate-800 text-xs relative z-10">
+      <footer className="mt-auto bg-slate-900 text-slate-400 py-10 px-6 sm:px-12 border-t border-slate-800 text-xs relative z-10">
         <div className="max-w-7xl mx-auto space-y-4 text-center sm:text-left flex flex-col sm:flex-row justify-between items-start">
           <div className="space-y-2 max-w-4xl">
             <div className="font-extrabold text-slate-200 uppercase tracking-wider flex items-center justify-center sm:justify-start">
@@ -599,3 +599,4 @@ export const LandingPage: React.FC = () => {
   );
 };
 
+export default LandingPage;
