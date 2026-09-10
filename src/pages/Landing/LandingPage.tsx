@@ -186,62 +186,79 @@ export const LandingPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Hero Interactive Deterioration Highlight Preview Card */}
+        {/* Infinite Unboxed Scrolling Text Ticker & Open Project Content */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="pt-6 max-w-4xl mx-auto"
+          className="pt-10 space-y-12 max-w-6xl mx-auto overflow-hidden text-left"
         >
-          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xl text-left space-y-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-              <div>
-                <div className="flex items-center space-x-3">
-                  <h3 className="text-lg font-bold text-slate-900">Eleanor Vance (P12345) — Bed 12</h3>
-                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                    ICU Unit A
-                  </span>
+          {/* Scrolling Text Marquee - Completely Unboxed */}
+          <div className="relative w-full overflow-hidden py-4 border-y border-slate-200/60">
+            <motion.div
+              className="flex whitespace-nowrap space-x-8"
+              animate={{ x: ['0%', '-50%'] }}
+              transition={{ repeat: Infinity, duration: 35, ease: 'linear' }}
+            >
+              {[
+                'Longitudinal Clinical Intelligence',
+                'EMR & LIS Data Integration',
+                'ESP32 Bedside Telemetry Streaming',
+                'Rate-of-Change Velocity dV/dt Analysis',
+                '100% Explainable Rule + Trend + Anomaly Pipeline',
+                'Sub-500ms Real-Time Hardware Alert Pipeline',
+                'Multi-Parameter Cross-Correlated Deterioration Flags',
+                '4 Dedicated Portals: Doctor, Nurse, Lab & Admin',
+                'Longitudinal Clinical Intelligence',
+                'EMR & LIS Data Integration',
+                'ESP32 Bedside Telemetry Streaming',
+                'Rate-of-Change Velocity dV/dt Analysis',
+                '100% Explainable Rule + Trend + Anomaly Pipeline',
+                'Sub-500ms Real-Time Hardware Alert Pipeline',
+                'Multi-Parameter Cross-Correlated Deterioration Flags',
+                '4 Dedicated Portals: Doctor, Nurse, Lab & Admin',
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center space-x-3 text-slate-800 font-extrabold text-xs sm:text-sm tracking-wider uppercase shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-teal-600 shrink-0" />
+                  <span>{item}</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">Attending Physician: Dr. Sarah Jenkins</p>
-              </div>
+              ))}
+            </motion.div>
+          </div>
 
-              <div className="flex items-center space-x-2">
-                <span className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200 animate-pulse">
-                  HIGH RISK (72% ADVISORY)
-                </span>
+          {/* Unboxed Project Highlights Text */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left pt-2 px-2">
+            <div className="space-y-2">
+              <div className="text-xs font-mono font-bold text-teal-700 uppercase tracking-widest flex items-center">
+                <Activity className="w-4 h-4 mr-1.5 text-teal-600" />
+                LONGITUDINAL TRAJECTORY
               </div>
+              <h3 className="text-lg font-black text-slate-900">Beyond Spot-Check Values</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                Single lab results often hide progressive deterioration. LCIIS evaluates multi-day rate of change (dV/dt), slope persistence, and patient-specific baseline divergence across serial draws.
+              </p>
             </div>
 
-            {/* What Changed Highlight Box */}
-            <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between text-xs font-extrabold text-teal-800 tracking-wider uppercase">
-                <span className="flex items-center">
-                  <Brain className="w-4 h-4 mr-1.5 text-teal-700" /> EXPLAINABLE AI ANALYSIS — WHY FLAGGED?
-                </span>
-                <span className="text-slate-500 font-mono text-[10px]">Deterministic Pipeline</span>
+            <div className="space-y-2">
+              <div className="text-xs font-mono font-bold text-teal-700 uppercase tracking-widest flex items-center">
+                <Cpu className="w-4 h-4 mr-1.5 text-teal-600" />
+                HARDWARE & IOT STREAMING
               </div>
+              <h3 className="text-lg font-black text-slate-900">Sub-Second Bedside Telemetry</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                Integrates continuous ESP32 bedside telemetry and wearable Pocket Alert hardware dongles over Firebase RTDB, delivering explainable alerts to staff under 500ms.
+              </p>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs space-y-1">
-                  <div className="font-bold text-orange-700 flex items-center justify-between">
-                    <span>Creatinine Upward Slope</span>
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                  <div className="text-slate-900 font-mono font-bold">0.9 → 1.0 → 1.1 → 1.3 mg/dL</div>
-                  <p className="text-[11px] text-slate-500">Gradual progression across serial lab draws</p>
-                </div>
-
-                <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs space-y-1">
-                  <div className="font-bold text-red-700 flex items-center justify-between">
-                    <span>SpO2 Hypoxemia Trend</span>
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                  <div className="text-slate-900 font-mono font-bold">98% → 95% → 92% (Low)</div>
-                  <p className="text-[11px] text-slate-500">Continuous bedside telemetry decline</p>
-                </div>
+            <div className="space-y-2">
+              <div className="text-xs font-mono font-bold text-teal-700 uppercase tracking-widest flex items-center">
+                <ShieldCheck className="w-4 h-4 mr-1.5 text-teal-600" />
+                EXPLAINABLE AI REASONING
               </div>
+              <h3 className="text-lg font-black text-slate-900">100% Deterministic & Auditable</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                Combines rule-based bounds, statistical z-score anomalies, and weighted risk models into human-readable "WHY" explanations for doctors, nurses, and lab specialists.
+              </p>
             </div>
           </div>
         </motion.div>
