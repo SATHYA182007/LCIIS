@@ -183,13 +183,6 @@ export const LandingPage: React.FC = () => {
               <span>LAUNCH CLINICAL PORTAL</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => navigate('/simulation')}
-              className="bg-slate-100 border border-slate-200 hover:bg-slate-200/80 text-slate-800 font-extrabold text-sm px-8 py-4 rounded-2xl transition-all flex items-center space-x-2"
-            >
-              <Cpu className="w-4 h-4 text-teal-700" />
-              <span>EXPLORE HARDWARE SIMULATION</span>
-            </button>
           </div>
         </motion.div>
 
