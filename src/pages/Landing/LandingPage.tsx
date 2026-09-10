@@ -1,124 +1,601 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ArrowRight, Sparkles, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  Activity,
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
+  TrendingUp,
+  FlaskConical,
+  HeartPulse,
+  Stethoscope,
+  Cpu,
+  Layers,
+  FileText,
+  Brain,
+  Zap,
+  BarChart3,
+  Clock,
+  Radio,
+  Lock,
+  ChevronRight,
+  AlertTriangle,
+  Database,
+  Sliders
+} from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [activeRoleTab, setActiveRoleTab] = useState<'doctor' | 'nurse' | 'laboratory' | 'admin'>('doctor');
+
+  // Animation Variants
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15
+      }
+    }
+  };
+
+  const roleDetails = {
+    doctor: {
+      title: 'Physician Command Center',
+      icon: Stethoscope,
+      color: 'teal',
+      route: '/doctor/dashboard',
+      desc: 'Focuses on early deterioration detection, plain-language "WHAT CHANGED?" cards, Recharts time-series graphs, prescribing medications, recording care actions, and alert overrides.',
+      features: [
+        'Plain-Language "WHAT CHANGED?" Root Cause Analysis',
+        'Serial Trend Line Charts for Creatinine, CRP, SpO2 & Heart Rate',
+        'Direct Prescription & Care Action Interventions',
+        'Alert Acknowledgment & Clinical Override Auditing'
+      ]
+    },
+    nurse: {
+      title: 'Bedside Telemetry & Nursing Observations',
+      icon: HeartPulse,
+      color: 'blue',
+      route: '/nurse/dashboard',
+      desc: 'Subscribes to live ward vital telemetry grids, records AVPU consciousness levels, pain scores, fluid intake/output balance, and bedside spot-check observations.',
+      features: [
+        'Live ICU & Ward Telemetry Stream Grid',
+        'AVPU Consciousness & Pain Assessment Modals',
+        'Fluid Balance & Spot-Check Vitals Entry',
+        'Instant Nurse Pocket Device Notifications'
+      ]
+    },
+    laboratory: {
+      title: 'LIS Laboratory Entry & Verification Queue',
+      icon: FlaskConical,
+      color: 'emerald',
+      route: '/laboratory/dashboard',
+      desc: 'Records new lab investigation results (Biochemistry, Inflammatory, Hematology), validates reference range bounds, verifies technician entries, and triggers the intelligence pipeline.',
+      features: [
+        'Rapid LIS Investigation Result Entry',
+        'Automated Reference Range Bound Checking',
+        'Verified Results Audit Queue & Historical Search',
+        'Instant Real-Time Intelligence Pipeline Triggering'
+      ]
+    },
+    admin: {
+      title: 'Operations & Expiry Control Center',
+      icon: ShieldCheck,
+      color: 'purple',
+      route: '/admin/dashboard',
+      desc: 'Monitors pharmaceutical stock movements, tracks Expiry Warning Center bands (90, 60, 30, 7-day alert bands), manages ESP32 telemetry hardware devices, and inspects immutable audit logs.',
+      features: [
+        'Pharmaceutical Stock Ledgers & Reorder Warnings',
+        'Multi-Band Expiry Warning Center (90, 60, 30, 7 days)',
+        'ESP32 Device Node Heartbeat & Signal Monitor',
+        'Immutable Security & Audit Trail Inspection'
+      ]
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans select-none">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none overflow-x-hidden">
+      {/* Background Ambient Glow Gradients */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-cyan-500/10 rounded-full blur-3xl" />
+      </div>
+
       {/* Navigation Header */}
-      <header className="h-16 sm:h-20 border-b border-gray-100 px-4 sm:px-8 flex items-center justify-between bg-white/90 backdrop-blur-md sticky top-0 z-40">
-        <div className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-teal-700 flex items-center justify-center text-white shadow-xs">
-            <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
+      <header className="h-20 border-b border-slate-800/80 px-6 sm:px-12 flex items-center justify-between bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => navigate('/')}>
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-teal-900/40 group-hover:scale-105 transition-all">
+            <Activity className="w-6 h-6" />
           </div>
           <div>
-            <div className="font-bold text-slate-900 text-sm sm:text-base tracking-tight">LCIIS</div>
-            <div className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Clinical Monitoring</div>
+            <div className="font-extrabold text-white text-lg tracking-tight flex items-center space-x-1.5">
+              <span>LCIIS</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 font-semibold uppercase tracking-wider">
+                v2.4 Pro
+              </span>
+            </div>
+            <div className="text-xs text-teal-300/80 font-medium">Longitudinal Clinical Intelligence</div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 sm:space-x-4">
+        <nav className="hidden md:flex items-center space-x-8 text-xs font-bold text-slate-300">
+          <a href="#overview" className="hover:text-teal-400 transition-colors">OVERVIEW</a>
+          <a href="#engines" className="hover:text-teal-400 transition-colors">INTELLIGENCE ENGINES</a>
+          <a href="#workstations" className="hover:text-teal-400 transition-colors">HOSPITAL ROLES</a>
+          <a href="#hardware" className="hover:text-teal-400 transition-colors">HARDWARE & IoT</a>
+        </nav>
+
+        <div className="flex items-center space-x-3">
           <button
             onClick={() => navigate('/auth')}
-            className="text-xs font-bold text-slate-700 hover:text-teal-800 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors"
+            className="text-xs font-extrabold text-slate-300 hover:text-white px-4 py-2 rounded-xl transition-colors"
           >
             SIGN IN
           </button>
           <button
             onClick={() => navigate('/auth')}
-            className="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl shadow-xs transition-all flex items-center space-x-1.5 sm:space-x-2"
+            className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-teal-900/40 transition-all flex items-center space-x-2"
           >
             <span>GET STARTED</span>
-            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 sm:py-20 px-4 sm:px-8 max-w-6xl mx-auto w-full text-center space-y-6 sm:space-y-8">
-        <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-teal-50 border border-teal-100 text-teal-800 text-xs font-bold">
-          <Sparkles className="w-4 h-4 text-teal-600" />
-          <span>GREENMINDS HEALTHCARE INTELLIGENCE</span>
+      <section id="overview" className="relative z-10 pt-16 pb-20 px-6 sm:px-12 max-w-7xl mx-auto w-full text-center space-y-8">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
+          className="space-y-6"
+        >
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-extrabold backdrop-blur-md">
+            <Sparkles className="w-4 h-4 text-teal-400" />
+            <span>GREENMINDS HEALTHCARE INTELLIGENCE PLATFORM</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl xl:text-7xl font-black text-white tracking-tight leading-tight max-w-5xl mx-auto">
+            Don't Just View the Latest Result.{' '}
+            <span className="bg-gradient-to-r from-teal-400 via-emerald-300 to-cyan-400 bg-clip-text text-transparent">
+              Understand the Clinical Trajectory.
+            </span>
+          </h1>
+
+          <p className="text-slate-300 text-base sm:text-xl max-w-3xl mx-auto leading-relaxed font-normal">
+            LCIIS unifies EMR patient records, LIS serial lab trends, and real-time bedside telemetry streams into one explainable deterioration alert platform.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-4 pt-4">
+            <button
+              onClick={() => navigate('/auth')}
+              className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-extrabold text-sm px-8 py-4 rounded-2xl shadow-xl shadow-teal-950 transition-all flex items-center space-x-2"
+            >
+              <span>LAUNCH CLINICAL PORTAL</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => navigate('/simulation')}
+              className="bg-slate-900/90 border border-slate-700/80 hover:bg-slate-800 text-slate-200 font-extrabold text-sm px-8 py-4 rounded-2xl transition-all flex items-center space-x-2"
+            >
+              <Cpu className="w-4 h-4 text-teal-400" />
+              <span>EXPLORE HARDWARE SIMULATION</span>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Hero Interactive Deterioration Highlight Preview Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="pt-6 max-w-4xl mx-auto"
+        >
+          <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl text-left space-y-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <div className="flex items-center space-x-3">
+                  <h3 className="text-lg font-bold text-white">Eleanor Vance (P12345) — Bed 12</h3>
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold border border-slate-700">
+                    ICU Unit A
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Attending Physician: Dr. Sarah Jenkins</p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <span className="px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/40 animate-pulse">
+                  HIGH RISK (72% ADVISORY)
+                </span>
+              </div>
+            </div>
+
+            {/* What Changed Highlight Box */}
+            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between text-xs font-extrabold text-teal-300 tracking-wider uppercase">
+                <span className="flex items-center">
+                  <Brain className="w-4 h-4 mr-1.5 text-teal-400" /> EXPLAINABLE AI ANALYSIS — WHY FLAGGED?
+                </span>
+                <span className="text-slate-500 font-mono text-[10px]">Deterministic Pipeline</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-1">
+                  <div className="font-bold text-orange-400 flex items-center justify-between">
+                    <span>Creatinine Upward Slope</span>
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div className="text-slate-200 font-mono">0.9 → 1.0 → 1.1 → 1.3 mg/dL</div>
+                  <p className="text-[11px] text-slate-400">Gradual progression across serial lab draws</p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-1">
+                  <div className="font-bold text-red-400 flex items-center justify-between">
+                    <span>SpO2 Hypoxemia Trend</span>
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div className="text-slate-200 font-mono">98% → 95% → 92% (Low)</div>
+                  <p className="text-[11px] text-slate-400">Continuous bedside telemetry decline</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Core Clinical Problem vs Solution Grid (Scroll Animated) */}
+      <section className="py-20 bg-slate-900/60 border-y border-slate-800/80 relative z-10 px-6 sm:px-12">
+        <div className="max-w-6xl mx-auto space-y-12">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className="text-center space-y-3 max-w-3xl mx-auto"
+          >
+            <span className="text-xs font-extrabold text-teal-400 tracking-wider uppercase">CLINICAL PARADIGM SHIFT</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white">Why Point-in-Time Spot Checks Fail Patients</h2>
+            <p className="text-slate-400 text-sm sm:text-base">
+              A lab test remaining strictly within standard reference limits can still represent dangerous clinical deterioration when evaluated over time.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          >
+            {/* The Problem */}
+            <motion.div variants={fadeInUp} className="p-8 rounded-3xl bg-slate-950 border border-red-900/40 space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 font-bold">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-white">Traditional Isolated Testing</h3>
+              <ul className="space-y-3 text-xs text-slate-300">
+                <li className="flex items-start">
+                  <span className="text-red-400 mr-2 font-bold">✕</span>
+                  <span>Evaluates each test result as a disconnected single value.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-400 mr-2 font-bold">✕</span>
+                  <span>Misses subtle velocity changes (dV/dt) when Creatinine shifts within range (0.9 → 1.3 mg/dL).</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-400 mr-2 font-bold">✕</span>
+                  <span>Treats telemetry, lab results, and nurse notes in separate siloed systems.</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* The Solution */}
+            <motion.div variants={fadeInUp} className="p-8 rounded-3xl bg-slate-950 border border-teal-500/40 space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-white">LCIIS Longitudinal Intelligence</h3>
+              <ul className="space-y-3 text-xs text-slate-300">
+                <li className="flex items-start">
+                  <span className="text-teal-400 mr-2 font-bold">✓</span>
+                  <span>Tracks velocity, slope, persistence, and individualized patient baseline μ_patient.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-teal-400 mr-2 font-bold">✓</span>
+                  <span>Detects multi-system concurrent changes across lab draws and telemetry.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-teal-400 mr-2 font-bold">✓</span>
+                  <span>Provides plain-language "WHY" reasoning for every alert escalation.</span>
+                </li>
+              </ul>
+            </motion.div>
+          </motion.div>
         </div>
+      </section>
 
-        <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-tight max-w-4xl mx-auto">
-          See the Patient's Clinical Story.
-        </h1>
+      {/* 5 Deterministic Intelligence Engines Grid (Scroll Animated) */}
+      <section id="engines" className="py-20 px-6 sm:px-12 max-w-7xl mx-auto w-full relative z-10 space-y-12">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeInUp}
+          className="text-center space-y-3 max-w-3xl mx-auto"
+        >
+          <span className="text-xs font-extrabold text-teal-400 tracking-wider uppercase">DETERMINISTIC PIPELINE</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-white">5 Core Intelligence Engines</h2>
+          <p className="text-slate-400 text-sm sm:text-base">
+            Every alert is backed by explainable mathematical formulas and transparent state machine transitions.
+          </p>
+        </motion.div>
 
-        <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
-          LCIIS brings patient records, laboratory results and real-time vital signs together to help healthcare professionals recognize meaningful changes over time.
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          {/* Engine 1 */}
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center font-bold">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-white group-hover:text-teal-300 transition-colors">1. Trend Analysis Engine</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Calculates rate of change (dV/dt), directional regression slope, consecutive persistence across k measurements, and volatility.
+            </p>
+          </motion.div>
+
+          {/* Engine 2 */}
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+              <Zap className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">2. Anomaly Engine</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Detects statistical z-score outliers (≥ 2.5σ) and sudden range-relative jump spikes across physiological measurements.
+            </p>
+          </motion.div>
+
+          {/* Engine 3 */}
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold">
+              <Sliders className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-white group-hover:text-cyan-300 transition-colors">3. Multi-Factor Risk Aggregator</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Combines rule-based scores, trend outputs, anomaly detections, and ML predictions into advisory risk bands (`STABLE` to `CRITICAL`).
+            </p>
+          </motion.div>
+
+          {/* Engine 4 */}
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">
+              <Layers className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-white group-hover:text-purple-300 transition-colors">4. Patient Status Engine</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Manages state transitions (`STABLE`, `MONITOR`, `HIGH RISK`, `CRITICAL`). Ensures missing telemetry data never triggers false deterioration alerts.
+            </p>
+          </motion.div>
+
+          {/* Engine 5 */}
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 transition-all space-y-3 group md:col-span-2">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">
+              <Brain className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">5. Explainable Reasoning Engine</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Generates transparent, plain-language "WHY" explanations for clinicians detailing multi-parameter changes, time intervals, and risk contributions.
+            </p>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* 4 Tailored Hospital Workstations Showcase (Interactive Tabs) */}
+      <section id="workstations" className="py-20 bg-slate-900/60 border-y border-slate-800/80 relative z-10 px-6 sm:px-12">
+        <div className="max-w-6xl mx-auto space-y-12">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className="text-center space-y-3 max-w-3xl mx-auto"
+          >
+            <span className="text-xs font-extrabold text-teal-400 tracking-wider uppercase">ROLE-BASED WORKSPACES</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white">4 Dedicated Hospital User Roles</h2>
+            <p className="text-slate-400 text-sm sm:text-base">
+              LCIIS routes healthcare personnel to custom, role-optimized clinical portals.
+            </p>
+          </motion.div>
+
+          {/* Role Tabs */}
+          <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-slate-950 rounded-2xl border border-slate-800 max-w-3xl mx-auto">
+            {(['doctor', 'nurse', 'laboratory', 'admin'] as const).map((roleKey) => {
+              const r = roleDetails[roleKey];
+              const IconComp = r.icon;
+              const isActive = activeRoleTab === roleKey;
+              return (
+                <button
+                  key={roleKey}
+                  onClick={() => setActiveRoleTab(roleKey)}
+                  className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center space-x-2 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-teal-900/40'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  }`}
+                >
+                  <IconComp className="w-4 h-4" />
+                  <span className="capitalize">{roleKey}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Role Active Card Details */}
+          <motion.div
+            key={activeRoleTab}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="p-8 rounded-3xl bg-slate-950 border border-slate-800 space-y-6"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center font-bold">
+                  {React.createElement(roleDetails[activeRoleTab].icon, { className: 'w-6 h-6' })}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">{roleDetails[activeRoleTab].title}</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">{roleDetails[activeRoleTab].desc}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => navigate('/auth')}
+                className="self-start sm:self-center px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-extrabold rounded-xl transition-all flex items-center space-x-1.5"
+              >
+                <span>OPEN WORKSTATION</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {roleDetails[activeRoleTab].features.map((feat, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 flex items-center space-x-3 text-xs text-slate-200 font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0" />
+                  <span>{feat}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Hardware & IoT Telemetry Architecture */}
+      <section id="hardware" className="py-20 px-6 sm:px-12 max-w-7xl mx-auto w-full relative z-10 space-y-12">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeInUp}
+          className="text-center space-y-3 max-w-3xl mx-auto"
+        >
+          <span className="text-xs font-extrabold text-teal-400 tracking-wider uppercase">HARDWARE INTEGRATION</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-white">ESP32 & Pocket Alert Dongle System</h2>
+          <p className="text-slate-400 text-sm sm:text-base">
+            End-to-end hardware telemetry streaming and pocket alert delivery devices for clinical staff.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+        >
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center font-bold">
+              <Cpu className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-white">ESP32 Microcontroller Node</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Streams continuous bedside vitals JSON payloads (/liveVitals/patient_id) over Firebase Realtime Database with automatic Wi-Fi reconnect handling.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+              <Radio className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-white">Pocket Alert Hardware Dongle</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Portable healthcare staff device equipped with an OLED display, piezo buzzer alert tones, haptic vibration motor, and alert LEDs.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeInUp} className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold">
+              <Sliders className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-white">Interactive Scenario Simulator</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Built-in telemetry simulator (`/simulation`) streams clinical scenarios at 1x, 2x, 5x, and 10x speeds for training and validation.
+            </p>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* Impact Numbers Banner */}
+      <section className="py-16 bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 border-y border-slate-800/80 relative z-10 px-6 sm:px-12">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <div className="text-3xl sm:text-5xl font-black text-white">100%</div>
+            <div className="text-xs text-teal-300 font-bold uppercase tracking-wider mt-2">Explainable Reasoning</div>
+          </div>
+          <div>
+            <div className="text-3xl sm:text-5xl font-black text-white">&lt; 500ms</div>
+            <div className="text-xs text-teal-300 font-bold uppercase tracking-wider mt-2">Alert Pipeline Latency</div>
+          </div>
+          <div>
+            <div className="text-3xl sm:text-5xl font-black text-white">4</div>
+            <div className="text-xs text-teal-300 font-bold uppercase tracking-wider mt-2">Hospital Workstation Portals</div>
+          </div>
+          <div>
+            <div className="text-3xl sm:text-5xl font-black text-white">24/7</div>
+            <div className="text-xs text-teal-300 font-bold uppercase tracking-wider mt-2">Continuous IoT Monitoring</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call To Action Banner */}
+      <section className="py-20 px-6 sm:px-12 max-w-5xl mx-auto text-center space-y-6 relative z-10">
+        <h2 className="text-3xl sm:text-5xl font-black text-white">Ready to Experience Longitudinal Intelligence?</h2>
+        <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto">
+          Explore the clinical portals or test the real-time hardware telemetry simulation engine.
         </p>
-
         <div className="flex flex-wrap justify-center gap-4 pt-4">
           <button
             onClick={() => navigate('/auth')}
-            className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm px-8 py-4 rounded-xl shadow-md transition-all flex items-center space-x-2"
+            className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-extrabold text-sm px-8 py-4 rounded-2xl shadow-xl shadow-teal-950 transition-all flex items-center space-x-2"
           >
-            <span>SIGN IN</span>
+            <span>SIGN IN TO PORTAL</span>
             <ArrowRight className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => {
-              const el = document.getElementById('features-section');
-              el?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="bg-gray-50 border border-gray-200 hover:bg-gray-100 text-slate-800 font-bold text-sm px-8 py-4 rounded-xl transition-all"
-          >
-            LEARN MORE
-          </button>
         </div>
       </section>
 
-      {/* Subtle Visual Demo Card */}
-      <section id="features-section" className="py-12 bg-teal-50/40 border-t border-b border-teal-100">
-        <div className="max-w-4xl mx-auto px-8">
-          <div className="card-clinical p-6 bg-white shadow-md border border-gray-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div>
-                <div className="text-xs font-bold text-slate-900">Eleanor Vance (P12345) — Bed 12</div>
-                <div className="text-[11px] text-gray-500">ICU Unit A • Attending: Dr. Sarah Jenkins</div>
-              </div>
-              <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-full">
-                HIGH RISK
-              </span>
-            </div>
-
-            <div className="p-4 bg-teal-50/50 rounded-xl border border-teal-100 space-y-2 text-xs">
-              <div className="font-bold text-teal-900 uppercase tracking-wider text-[10px]">
-                PATIENT STATUS — WHY FLAGGED?
-              </div>
-              <ul className="space-y-1 text-slate-700 font-medium">
-                <li>• Oxygen level has decreased over recent readings (98% → 92%).</li>
-                <li>• Heart rate has increased (82 → 112 BPM).</li>
-                <li>• Creatinine is gradually increasing (0.9 → 1.3 mg/dL).</li>
-                <li>• Several values changed together.</li>
-              </ul>
-              <div className="font-bold text-teal-800 text-[11px] pt-1">
-                Clinical review recommended.
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Clinical Disclaimer Footer */}
-      <footer className="mt-auto bg-slate-900 text-slate-400 py-8 px-8 border-t border-slate-800 text-xs">
-        <div className="max-w-6xl mx-auto space-y-2 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center">
-          <div className="space-y-1 max-w-3xl">
-            <div className="font-bold text-slate-200 uppercase tracking-wider flex items-center justify-center sm:justify-start">
-              <Lock className="w-3.5 h-3.5 mr-1.5 text-teal-400" /> CLINICAL DECISION SUPPORT ONLY
+      {/* Clinical & Synthetic Disclaimer Footer */}
+      <footer className="mt-auto bg-slate-950 text-slate-400 py-10 px-6 sm:px-12 border-t border-slate-800 text-xs relative z-10">
+        <div className="max-w-7xl mx-auto space-y-4 text-center sm:text-left flex flex-col sm:flex-row justify-between items-start">
+          <div className="space-y-2 max-w-4xl">
+            <div className="font-extrabold text-slate-200 uppercase tracking-wider flex items-center justify-center sm:justify-start">
+              <Lock className="w-4 h-4 mr-2 text-teal-400" /> CLINICAL DECISION SUPPORT & ADVISORY SYSTEM ONLY
             </div>
             <p className="text-slate-400 text-[11px] leading-relaxed">
-              This platform analyzes available patient, laboratory and physiological data to provide advisory alerts. It does not diagnose disease, prescribe treatment, or replace professional clinical judgment.
+              LCIIS provides advisory decision-support analysis of available patient, laboratory, and physiological telemetry data. It does not diagnose disease, prescribe treatment, or replace professional clinical judgment. Final clinical decisions remain with authorized healthcare professionals.
             </p>
           </div>
-          <div className="text-slate-500 font-mono text-[11px]">
-            DEMO ENVIRONMENT • SYNTHETIC PATIENT DATA
+          <div className="text-slate-500 font-mono text-[11px] shrink-0 self-center sm:self-start">
+            DEMO ENVIRONMENT • SYNTHETIC DATA • GREENMINDS AI
           </div>
         </div>
       </footer>
     </div>
   );
 };
+
