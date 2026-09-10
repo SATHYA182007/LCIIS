@@ -186,12 +186,12 @@ export const LandingPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Infinite Unboxed Scrolling Text Ticker & Open Project Content */}
+        {/* Infinite Unboxed Scrolling Text Ticker */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="pt-10 space-y-12 max-w-6xl mx-auto overflow-hidden text-left"
+          className="pt-10 max-w-6xl mx-auto overflow-hidden text-left"
         >
           {/* Scrolling Text Marquee - Completely Unboxed */}
           <div className="relative w-full overflow-hidden py-4 border-y border-slate-200/60">
@@ -224,42 +224,6 @@ export const LandingPage: React.FC = () => {
                 </div>
               ))}
             </motion.div>
-          </div>
-
-          {/* Unboxed Project Highlights Text */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left pt-2 px-2">
-            <div className="space-y-2">
-              <div className="text-xs font-mono font-bold text-teal-700 uppercase tracking-widest flex items-center">
-                <Activity className="w-4 h-4 mr-1.5 text-teal-600" />
-                LONGITUDINAL TRAJECTORY
-              </div>
-              <h3 className="text-lg font-black text-slate-900">Beyond Spot-Check Values</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                Single lab results often hide progressive deterioration. LCIIS evaluates multi-day rate of change (dV/dt), slope persistence, and patient-specific baseline divergence across serial draws.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-xs font-mono font-bold text-teal-700 uppercase tracking-widest flex items-center">
-                <Cpu className="w-4 h-4 mr-1.5 text-teal-600" />
-                HARDWARE & IOT STREAMING
-              </div>
-              <h3 className="text-lg font-black text-slate-900">Sub-Second Bedside Telemetry</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                Integrates continuous ESP32 bedside telemetry and wearable Pocket Alert hardware dongles over Firebase RTDB, delivering explainable alerts to staff under 500ms.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-xs font-mono font-bold text-teal-700 uppercase tracking-widest flex items-center">
-                <ShieldCheck className="w-4 h-4 mr-1.5 text-teal-600" />
-                EXPLAINABLE AI REASONING
-              </div>
-              <h3 className="text-lg font-black text-slate-900">100% Deterministic & Auditable</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                Combines rule-based bounds, statistical z-score anomalies, and weighted risk models into human-readable "WHY" explanations for doctors, nurses, and lab specialists.
-              </p>
-            </div>
           </div>
         </motion.div>
       </section>
