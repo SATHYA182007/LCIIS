@@ -103,11 +103,12 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans select-none overflow-x-hidden">
-      {/* Background Ambient Glow Gradients */}
+      {/* Background Ambient Glow & Moving Grid Layer */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-emerald-500/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-cyan-500/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-moving-grid opacity-85" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-cyan-500/10 rounded-full blur-3xl" />
       </div>
 
       {/* Navigation Header */}
