@@ -6,6 +6,7 @@ import { Header } from '../../components/layout/Header';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { generateNextPatientId } from '../../services/firebaseService';
 import { UserPlus, CheckCircle2, ChevronLeft, RefreshCw, Sparkles } from 'lucide-react';
+import { CustomDatePicker } from '../../components/common/CustomDatePicker';
 import { toast } from 'sonner';
 import type { Patient } from '../../types';
 
@@ -338,12 +339,10 @@ export const RegisterPatientPage: React.FC = () => {
                     <label className="block text-xs font-bold text-slate-700 mb-1">
                       Date of Birth <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="date"
+                    <CustomDatePicker
                       value={dateOfBirth}
-                      onChange={(e) => handleDobChange(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
-                      required
+                      onChange={(newDob) => handleDobChange(newDob)}
+                      placeholder="Select Date of Birth"
                     />
                   </div>
 
