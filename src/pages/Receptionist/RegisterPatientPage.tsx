@@ -224,7 +224,7 @@ export const RegisterPatientPage: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <Header title="Patient Registration" />
 
-        <main className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto w-full">
+        <main className="p-4 sm:p-6 space-y-6 max-w-3xl mx-auto w-full">
           {/* Top Bar Header */}
           <div className="flex items-center justify-between">
             <button
