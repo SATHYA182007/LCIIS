@@ -26,6 +26,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   maxYear = new Date().getFullYear(),
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isYearView, setIsYearView] = useState(false);
 
   // Parse initial date or default to 1980-01-01
   const parsedDate = value ? new Date(value + 'T00:00:00') : new Date(1980, 0, 1);
@@ -35,17 +36,26 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   const [currentYear, setCurrentYear] = useState<number>(validDate.getFullYear());
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const activeYearRef = useRef<HTMLButtonElement>(null);
 
   // Close popover when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setIsYearView(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Scroll to active year when year view opens
+  useEffect(() => {
+    if (isYearView && activeYearRef.current) {
+      activeYearRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [isYearView]);
 
   // Sync internal Month/Year if external value changes
   useEffect(() => {
@@ -87,6 +97,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     const formatted = `${currentYear}-${monthStr}-${dayStr}`;
     onChange(formatted);
     setIsOpen(false);
+    setIsYearView(false);
   };
 
   const formatDisplay = (val: string) => {
@@ -102,7 +113,10 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     <div className={`relative ${className}`} ref={containerRef}>
       {/* Interactive Trigger Input Box */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setIsYearView(false);
+        }}
         className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-medium cursor-pointer flex items-center justify-between hover:border-teal-400 focus:ring-2 focus:ring-teal-500 transition-all shadow-xs group"
       >
         <div className="flex items-center space-x-2.5">
@@ -119,7 +133,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       {/* Popover Calendar */}
       {isOpen && (
         <div className="absolute left-0 top-full mt-1 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 text-xs select-none animate-in fade-in zoom-in-95 duration-150">
-          {/* Header Controls: Month/Year Dropdowns & Nav Arrows */}
+          {/* Header Controls: Month Select & Year Button */}
           <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2.5">
             <button
               type="button"
@@ -135,23 +149,27 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
               <select
                 value={currentMonth}
                 onChange={(e) => setCurrentMonth(Number(e.target.value))}
-                className="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-teal-500 focus:outline-hidden cursor-pointer"
+                className="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-teal-500 focus:outline-hidden cursor-pointer"
               >
                 {MONTHS.map((m, idx) => (
                   <option key={m} value={idx}>{m}</option>
                 ))}
               </select>
 
-              {/* Year Dropdown */}
-              <select
-                value={currentYear}
-                onChange={(e) => setCurrentYear(Number(e.target.value))}
-                className="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-teal-500 focus:outline-hidden cursor-pointer"
+              {/* Year Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setIsYearView(!isYearView)}
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all flex items-center space-x-1 ${
+                  isYearView
+                    ? 'bg-teal-700 text-white border-teal-700 shadow-xs'
+                    : 'bg-slate-50 text-slate-900 border-slate-200 hover:bg-slate-100'
+                }`}
+                title="Click to toggle scrollable years grid"
               >
-                {years.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
+                <span>{currentYear}</span>
+                <span className="text-[10px] opacity-75">{isYearView ? '▲' : '▼'}</span>
+              </button>
             </div>
 
             <button
@@ -164,60 +182,95 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             </button>
           </div>
 
-          {/* Decade Quick Jump Pills */}
-          <div className="flex flex-wrap gap-1 mb-3">
-            {decadePills.map((yr) => (
-              <button
-                type="button"
-                key={yr}
-                onClick={() => setCurrentYear(yr)}
-                className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md transition-all ${
-                  currentYear === yr
-                    ? 'bg-teal-700 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {yr}s
-              </button>
-            ))}
-          </div>
+          {/* Year View or Days View */}
+          {isYearView ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-gray-500 border-b border-gray-100 pb-1">
+                <span>Select Birth Year</span>
+                <span className="text-teal-700 font-mono">1920 – {maxYear}</span>
+              </div>
+              <div className="max-h-48 overflow-y-auto grid grid-cols-4 gap-1.5 p-1 bg-slate-50/50 rounded-xl border border-slate-100">
+                {years.map((y) => {
+                  const isSelected = currentYear === y;
+                  return (
+                    <button
+                      type="button"
+                      key={y}
+                      ref={isSelected ? activeYearRef : undefined}
+                      onClick={() => {
+                        setCurrentYear(y);
+                        setIsYearView(false);
+                      }}
+                      className={`py-1.5 rounded-lg font-bold text-xs transition-all ${
+                        isSelected
+                          ? 'bg-teal-700 text-white shadow-md shadow-teal-900/20'
+                          : 'bg-white border border-slate-200 text-slate-800 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-900'
+                      }`}
+                    >
+                      {y}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Decade Quick Jump Pills */}
+              <div className="flex flex-wrap gap-1 mb-3">
+                {decadePills.map((yr) => (
+                  <button
+                    type="button"
+                    key={yr}
+                    onClick={() => setCurrentYear(yr)}
+                    className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md transition-all ${
+                      currentYear === yr
+                        ? 'bg-teal-700 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {yr}s
+                  </button>
+                ))}
+              </div>
 
-          {/* Weekday Headers */}
-          <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-gray-400 uppercase mb-1">
-            {DAYS_OF_WEEK.map((d) => (
-              <div key={d} className="py-1">{d}</div>
-            ))}
-          </div>
+              {/* Weekday Headers */}
+              <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-gray-400 uppercase mb-1">
+                {DAYS_OF_WEEK.map((d) => (
+                  <div key={d} className="py-1">{d}</div>
+                ))}
+              </div>
 
-          {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-1 text-center">
-            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-              <div key={`empty-${i}`} className="h-8" />
-            ))}
+              {/* Days Grid */}
+              <div className="grid grid-cols-7 gap-1 text-center">
+                {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                  <div key={`empty-${i}`} className="h-8" />
+                ))}
 
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const dayNum = i + 1;
-              const dayMonthStr = String(currentMonth + 1).padStart(2, '0');
-              const dayNumStr = String(dayNum).padStart(2, '0');
-              const dateStr = `${currentYear}-${dayMonthStr}-${dayNumStr}`;
-              const isSelected = value === dateStr;
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const dayNum = i + 1;
+                  const dayMonthStr = String(currentMonth + 1).padStart(2, '0');
+                  const dayNumStr = String(dayNum).padStart(2, '0');
+                  const dateStr = `${currentYear}-${dayMonthStr}-${dayNumStr}`;
+                  const isSelected = value === dateStr;
 
-              return (
-                <button
-                  type="button"
-                  key={dayNum}
-                  onClick={() => handleSelectDay(dayNum)}
-                  className={`h-8 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center ${
-                    isSelected
-                      ? 'bg-teal-700 text-white shadow-md shadow-teal-900/20 scale-105'
-                      : 'hover:bg-teal-50 text-slate-800 hover:text-teal-900'
-                  }`}
-                >
-                  {dayNum}
-                </button>
-              );
-            })}
-          </div>
+                  return (
+                    <button
+                      type="button"
+                      key={dayNum}
+                      onClick={() => handleSelectDay(dayNum)}
+                      className={`h-8 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center ${
+                        isSelected
+                          ? 'bg-teal-700 text-white shadow-md shadow-teal-900/20 scale-105'
+                          : 'hover:bg-teal-50 text-slate-800 hover:text-teal-900'
+                      }`}
+                    >
+                      {dayNum}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
           {/* Footer Actions */}
           <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-3">
@@ -231,6 +284,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                 const formattedToday = `${yr}-${m}-${d}`;
                 onChange(formattedToday);
                 setIsOpen(false);
+                setIsYearView(false);
               }}
               className="text-[11px] font-bold text-teal-700 hover:text-teal-800 flex items-center space-x-1"
             >
@@ -240,7 +294,10 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                setIsYearView(false);
+              }}
               className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[11px] transition-colors"
             >
               Close
@@ -251,3 +308,4 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     </div>
   );
 };
+
