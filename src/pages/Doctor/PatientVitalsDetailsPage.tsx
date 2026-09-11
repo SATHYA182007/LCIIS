@@ -77,21 +77,26 @@ export const PatientVitalsDetailsPage: React.FC = () => {
     { time: '02:00 PM', HeartRate: vitals?.heartRate?.value || 112, SpO2: vitals?.spo2?.value || 92, Systolic: vitals?.bloodPressure?.systolic.value || 138, Diastolic: vitals?.bloodPressure?.diastolic.value || 84, RespRate: vitals?.respiratoryRate?.value || 24, Temp: vitals?.temperature?.value || 38.2 },
   ];
 
-  const handleUpdateSubmit = (e: React.FormEvent) => {
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateLiveVitals(patient.id, {
-      heartRate: { value: Number(newHR), unit: 'BPM', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-      spo2: { value: Number(newSpO2), unit: '%', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-      bloodPressure: {
-        systolic: { value: Number(newSystolic), unit: 'mmHg', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-        diastolic: { value: Number(newDiastolic), unit: 'mmHg', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-      },
-      respiratoryRate: { value: Number(newRR), unit: '/min', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-      temperature: { value: Number(newTemp), unit: '°C', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-    });
+    try {
+      await updateLiveVitals(patient.id, {
+        heartRate: Number(newHR),
+        spo2: Number(newSpO2),
+        systolicBP: Number(newSystolic),
+        diastolicBP: Number(newDiastolic),
+        respiratoryRate: Number(newRR),
+        temperature: Number(newTemp),
+        timestamp: Date.now()
+      });
 
-    setIsUpdateVitalsModalOpen(false);
-    toast.success(`Bedside telemetry updated for ${patient.name}. Risk Engine recalculated.`);
+      setIsUpdateVitalsModalOpen(false);
+      toast.success(`Bedside telemetry updated for ${patient.name}!`, {
+        description: `HR: ${newHR} bpm | SpO2: ${newSpO2}% | BP: ${newSystolic}/${newDiastolic} mmHg`
+      });
+    } catch (err: any) {
+      toast.error('Failed to update vitals: ' + (err.message || 'Firebase error'));
+    }
   };
 
   const hrVal = vitals?.heartRate?.value || 112;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRealtime } from '../../context/RealtimeContext';
 import {
   ResponsiveContainer,
@@ -34,51 +34,65 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
   const [activeChartTab, setActiveChartTab] = useState<'hr' | 'spo2' | 'bp' | 'rr'>('hr');
   const [isUpdateVitalsModalOpen, setIsUpdateVitalsModalOpen] = useState(false);
 
-  if (!isOpen || !patientId) return null;
+  // Controlled form state for vitals update
+  const [formHR, setFormHR] = useState<number>(80);
+  const [formSpO2, setFormSpO2] = useState<number>(98);
+  const [formSystolic, setFormSystolic] = useState<number>(120);
+  const [formDiastolic, setFormDiastolic] = useState<number>(80);
+  const [formRR, setFormRR] = useState<number>(18);
+  const [formTemp, setFormTemp] = useState<number>(36.8);
 
-  const patient = getPatientById(patientId);
-
-  if (!patient) return null;
-
-  const vitals = liveVitalsMap[patientId] || liveVitalsMap['P12345'];
+  const patient = patientId ? getPatientById(patientId) : null;
+  const vitals = patientId ? (liveVitalsMap[patientId] || liveVitalsMap['P12345']) : null;
   const device = devices.find((d) => d.patientId === patientId || d.patientId === 'P12345') || devices[0];
 
-  const hrVal = vitals?.heartRate?.value || 112;
-  const spo2Val = vitals?.spo2?.value || 92;
+  // Sync controlled state whenever vitals or patientId changes
+  useEffect(() => {
+    if (vitals) {
+      if (vitals.heartRate?.value !== undefined) setFormHR(vitals.heartRate.value);
+      if (vitals.spo2?.value !== undefined) setFormSpO2(vitals.spo2.value);
+      if (vitals.bloodPressure?.systolic?.value !== undefined) setFormSystolic(vitals.bloodPressure.systolic.value);
+      if (vitals.bloodPressure?.diastolic?.value !== undefined) setFormDiastolic(vitals.bloodPressure.diastolic.value);
+      if (vitals.respiratoryRate?.value !== undefined) setFormRR(vitals.respiratoryRate.value);
+      if (vitals.temperature?.value !== undefined) setFormTemp(vitals.temperature.value);
+    }
+  }, [patientId, liveVitalsMap]);
+
+  if (!isOpen || !patientId || !patient) return null;
+
+  const hrVal = vitals?.heartRate?.value || formHR;
+  const spo2Val = vitals?.spo2?.value || formSpO2;
   const isHrHigh = hrVal > 100;
   const isSpo2Low = spo2Val < 94;
-
-  // Form state for vitals update inside popup
-  const newHR = vitals?.heartRate?.value || 112;
-  const newSpO2 = vitals?.spo2?.value || 92;
-  const newSystolic = vitals?.bloodPressure?.systolic.value || 138;
-  const newDiastolic = vitals?.bloodPressure?.diastolic.value || 84;
-  const newRR = vitals?.respiratoryRate?.value || 24;
-  const newTemp = vitals?.temperature?.value || 38.2;
 
   const vitalsTimeData = [
     { time: '10:00 AM', HeartRate: 82, SpO2: 98, Systolic: 120, Diastolic: 80, RespRate: 16, Temp: 37.0 },
     { time: '11:00 AM', HeartRate: 88, SpO2: 97, Systolic: 124, Diastolic: 82, RespRate: 18, Temp: 37.2 },
     { time: '12:00 PM', HeartRate: 94, SpO2: 96, Systolic: 128, Diastolic: 82, RespRate: 19, Temp: 37.5 },
     { time: '01:00 PM', HeartRate: 102, SpO2: 94, Systolic: 134, Diastolic: 84, RespRate: 22, Temp: 37.9 },
-    { time: '02:00 PM', HeartRate: hrVal, SpO2: spo2Val, Systolic: newSystolic, Diastolic: newDiastolic, RespRate: newRR, Temp: newTemp },
+    { time: '02:00 PM', HeartRate: hrVal, SpO2: spo2Val, Systolic: formSystolic, Diastolic: formDiastolic, RespRate: formRR, Temp: formTemp },
   ];
 
-  const handleUpdateSubmit = (e: React.FormEvent) => {
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateLiveVitals(patient.id, {
-      heartRate: { value: Number(newHR), unit: 'BPM', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-      spo2: { value: Number(newSpO2), unit: '%', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-      bloodPressure: {
-        systolic: { value: Number(newSystolic), unit: 'mmHg', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-        diastolic: { value: Number(newDiastolic), unit: 'mmHg', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-      },
-      respiratoryRate: { value: Number(newRR), unit: '/min', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-      temperature: { value: Number(newTemp), unit: '°C', timestamp: new Date().toISOString(), source: 'MANUAL_ENTRY', quality: 'GOOD' },
-    });
+    try {
+      await updateLiveVitals(patient.id, {
+        heartRate: Number(formHR),
+        spo2: Number(formSpO2),
+        systolicBP: Number(formSystolic),
+        diastolicBP: Number(formDiastolic),
+        respiratoryRate: Number(formRR),
+        temperature: Number(formTemp),
+        timestamp: Date.now()
+      });
 
-    setIsUpdateVitalsModalOpen(false);
-    toast.success(`Updated vitals telemetry for ${patient.name}. Risk score recalculated.`);
+      setIsUpdateVitalsModalOpen(false);
+      toast.success(`Updated bedside vitals for ${patient.name}!`, {
+        description: `HR: ${formHR} bpm | SpO2: ${formSpO2}% | BP: ${formSystolic}/${formDiastolic} mmHg`
+      });
+    } catch (err: any) {
+      toast.error('Failed to update vitals: ' + (err.message || 'Firebase error'));
+    }
   };
 
   return (
@@ -135,27 +149,64 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">HR (BPM)</label>
-                    <input type="number" defaultValue={hrVal} className="w-full p-2 border border-gray-300 rounded text-xs font-bold" />
+                    <input
+                      type="number"
+                      value={formHR}
+                      onChange={(e) => setFormHR(Number(e.target.value))}
+                      className="w-full p-2 border border-gray-300 rounded text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 font-mono"
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">SpO2 (%)</label>
-                    <input type="number" defaultValue={spo2Val} className="w-full p-2 border border-gray-300 rounded text-xs font-bold" />
+                    <input
+                      type="number"
+                      value={formSpO2}
+                      onChange={(e) => setFormSpO2(Number(e.target.value))}
+                      className="w-full p-2 border border-gray-300 rounded text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 font-mono"
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">Sys BP</label>
-                    <input type="number" defaultValue={newSystolic} className="w-full p-2 border border-gray-300 rounded text-xs" />
+                    <input
+                      type="number"
+                      value={formSystolic}
+                      onChange={(e) => setFormSystolic(Number(e.target.value))}
+                      className="w-full p-2 border border-gray-300 rounded text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 font-mono"
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">Dia BP</label>
-                    <input type="number" defaultValue={newDiastolic} className="w-full p-2 border border-gray-300 rounded text-xs" />
+                    <input
+                      type="number"
+                      value={formDiastolic}
+                      onChange={(e) => setFormDiastolic(Number(e.target.value))}
+                      className="w-full p-2 border border-gray-300 rounded text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 font-mono"
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">RR (/min)</label>
-                    <input type="number" defaultValue={newRR} className="w-full p-2 border border-gray-300 rounded text-xs" />
+                    <input
+                      type="number"
+                      value={formRR}
+                      onChange={(e) => setFormRR(Number(e.target.value))}
+                      className="w-full p-2 border border-gray-300 rounded text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 font-mono"
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">Temp (°C)</label>
-                    <input type="number" step="0.1" defaultValue={newTemp} className="w-full p-2 border border-gray-300 rounded text-xs" />
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={formTemp}
+                      onChange={(e) => setFormTemp(Number(e.target.value))}
+                      className="w-full p-2 border border-gray-300 rounded text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 font-mono"
+                      required
+                    />
                   </div>
                 </div>
 
@@ -163,7 +214,7 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
                   <button type="button" onClick={() => setIsUpdateVitalsModalOpen(false)} className="px-3 py-1.5 border border-gray-300 rounded font-bold text-gray-600 text-xs">
                     Cancel
                   </button>
-                  <button type="submit" className="px-4 py-1.5 bg-teal-700 text-white font-bold rounded text-xs">
+                  <button type="submit" className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-bold rounded text-xs transition-colors shadow-xs">
                     Submit Vitals
                   </button>
                 </div>
