@@ -4,13 +4,13 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getDatabase, type Database } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBcFoCsAdYWk9jsRfwbhm1Qepv5k1EdvvM',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'greenminds-2e90e.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'greenminds-2e90e',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'greenminds-2e90e.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '397125716933',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:397125716933:web:eddcb983a6b785d89e99ac',
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || 'https://greenminds-2e90e-default-rtdb.firebaseio.com',
 };
 
 export const isFirebaseConfigured = (): boolean => {
