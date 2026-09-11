@@ -23,7 +23,7 @@ export const NurseDashboard: React.FC = () => {
 
 
 
-  const assignedPatients = patients.filter((p) => p.departmentId === 'dept-icu' || p.id === 'P12345').slice(0, 8);
+  const assignedPatients = patients.filter((p) => p.currentStatus !== 'Discharged');
   const criticalCount = assignedPatients.filter((p) => p.currentStatus === 'CRITICAL' || p.currentStatus === 'HIGH RISK').length;
 
   const handleObsSubmit = (e: React.FormEvent) => {
