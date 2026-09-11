@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   Stethoscope,
   HeartPulse,
+  UserPlus,
+  Search,
   X
 } from 'lucide-react';
 
@@ -27,6 +29,13 @@ export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
 
   const role = user?.role || 'doctor';
+
+  const receptionistNav = [
+    { label: 'Dashboard', path: '/receptionist/dashboard', icon: Activity },
+    { label: 'Register Patient', path: '/receptionist/register-patient', icon: UserPlus },
+    { label: 'Patients', path: '/receptionist/patients', icon: Users },
+    { label: 'Search Patient', path: '/receptionist/search', icon: Search },
+  ];
 
   const doctorNav = [
     { label: 'Dashboard', path: '/doctor/dashboard', icon: Activity },
@@ -73,6 +82,7 @@ export const Sidebar: React.FC = () => {
 
   const getNavList = () => {
     switch (role) {
+      case 'receptionist': return receptionistNav;
       case 'nurse': return nurseNav;
       case 'laboratory': return labNav;
       case 'admin': return adminNav;

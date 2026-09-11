@@ -34,14 +34,14 @@ export const AdminPatientsPage: React.FC = () => {
     return matchesSearch && matchesWard;
   });
 
-  const handleAddPatientSubmit = (e: React.FormEvent) => {
+  const handleAddPatientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       toast.error('Please enter patient name.');
       return;
     }
 
-    const created = addPatient({
+    const created = await addPatient({
       name,
       age: Number(age),
       gender,

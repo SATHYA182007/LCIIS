@@ -1,15 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { UserProfile, UserRole } from '../types';
 import { DEMO_USERS } from '../lib/seedData';
-import { auth, isFirebaseConfigured } from '../lib/firebase';
-import { signOut as firebaseSignOut } from 'firebase/auth';
+import { auth, isFirebaseConfigured, rtdb } from '../lib/firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  type User as FirebaseUser
+} from 'firebase/auth';
+import { ref, get, set } from 'firebase/database';
+import { cleanUndefined } from '../services/firebaseService';
 
 interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, role?: UserRole) => Promise<boolean>;
-  signup: (email: string, name: string, role: UserRole) => Promise<boolean>;
+  login: (email: string, password?: string, role?: UserRole) => Promise<boolean>;
+  signup: (email: string, password?: string, name?: string, role?: UserRole, employeeId?: string) => Promise<boolean>;
+  resetPassword: (email: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -21,10 +31,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* ignore */ }
     }
-    // Default to doctor account
     return DEMO_USERS[0];
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Sync Firebase Auth session listener
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !auth) {
+      setIsLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
+      if (fbUser) {
+        // Try to fetch profile from RTDB
+        if (rtdb) {
+          try {
+            const userRef = ref(rtdb, `users/${fbUser.uid}`);
+            const snapshot = await get(userRef);
+            if (snapshot.exists()) {
+              const profile = snapshot.val() as UserProfile;
+              setUser(profile);
+              localStorage.setItem('lciis_auth_user', JSON.stringify(profile));
+              setIsLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.warn('Error fetching user profile from Firebase:', e);
+          }
+        }
+
+        // Fallback user profile from Firebase User credentials
+        const fallbackProfile: UserProfile = {
+          id: fbUser.uid,
+          email: fbUser.email || '',
+          name: fbUser.displayName || (fbUser.email ? fbUser.email.split('@')[0].toUpperCase() : 'CLINICAL USER'),
+          role: 'doctor',
+          department: 'Clinical Operations',
+          createdAt: new Date().toISOString()
+        };
+        setUser(fallbackProfile);
+        localStorage.setItem('lciis_auth_user', JSON.stringify(fallbackProfile));
+      } else {
+        // User signed out in Firebase
+        const saved = localStorage.getItem('lciis_auth_user');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            // If saved user was from Firebase, clear it
+            if (parsed.id?.startsWith('fb-') || parsed.id?.length > 20) {
+              setUser(null);
+              localStorage.removeItem('lciis_auth_user');
+            }
+          } catch (e) { /* ignore */ }
+        }
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -34,14 +100,94 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const login = async (email: string, selectedRole?: UserRole): Promise<boolean> => {
+  const login = async (email: string, password?: string, selectedRole?: UserRole): Promise<boolean> => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    const demoMatch = DEMO_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
 
-    // Match demo users or create user profile
-    const match = DEMO_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (match) {
-      setUser(match);
+    if (isFirebaseConfigured() && auth && password) {
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const fbUser = userCredential.user;
+
+        let userProfile: UserProfile | null = null;
+        if (rtdb) {
+          try {
+            const userRef = ref(rtdb, `users/${fbUser.uid}`);
+            const snapshot = await get(userRef);
+            if (snapshot.exists()) {
+              userProfile = snapshot.val() as UserProfile;
+            }
+          } catch (err) {
+            console.warn('Could not read user profile from RTDB:', err);
+          }
+        }
+
+        if (!userProfile) {
+          userProfile = {
+            id: fbUser.uid,
+            email: fbUser.email || email,
+            name: fbUser.displayName || (demoMatch ? demoMatch.name : email.split('@')[0].toUpperCase()),
+            role: selectedRole || (demoMatch ? demoMatch.role : 'doctor'),
+            employeeId: demoMatch?.employeeId,
+            department: demoMatch ? demoMatch.department : 'Clinical Operations',
+            createdAt: new Date().toISOString()
+          };
+          if (rtdb) {
+            await set(ref(rtdb, `users/${fbUser.uid}`), cleanUndefined(userProfile)).catch(() => {});
+          }
+        }
+
+        setUser(userProfile);
+        setIsLoading(false);
+        return true;
+      } catch (error: any) {
+        // If login failed because demo user is not registered in Firebase Auth yet, try creating account automatically!
+        if (demoMatch && (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found')) {
+          try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const fbUser = userCredential.user;
+            const userProfile: UserProfile = {
+              id: fbUser.uid,
+              email: fbUser.email || email,
+              name: demoMatch.name,
+              role: selectedRole || demoMatch.role,
+              employeeId: demoMatch.employeeId,
+              department: demoMatch.department,
+              createdAt: new Date().toISOString()
+            };
+            if (rtdb) {
+              await set(ref(rtdb, `users/${fbUser.uid}`), cleanUndefined(userProfile)).catch(() => {});
+            }
+            setUser(userProfile);
+            setIsLoading(false);
+            return true;
+          } catch (createErr) {
+            setUser(demoMatch);
+            setIsLoading(false);
+            return true;
+          }
+        }
+
+        // If demo user email or Auth provider is not enabled in Firebase Console, fallback to demo user
+        if (demoMatch) {
+          setUser(demoMatch);
+          setIsLoading(false);
+          return true;
+        }
+
+        if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
+          setIsLoading(false);
+          throw new Error('Email/Password Sign-In is not enabled in Firebase Console yet. Go to Firebase Console -> Authentication -> Sign-in method and enable Email/Password.');
+        }
+
+        setIsLoading(false);
+        throw new Error(error.message || 'Firebase authentication failed.');
+      }
+    }
+
+    // Fallback for demo users
+    if (demoMatch) {
+      setUser(demoMatch);
       setIsLoading(false);
       return true;
     }
@@ -52,33 +198,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       name: email.split('@')[0].toUpperCase(),
       role: selectedRole || 'doctor',
       department: 'Clinical Operations',
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     };
     setUser(newUser);
     setIsLoading(false);
     return true;
   };
 
-  const signup = async (email: string, name: string, role: UserRole): Promise<boolean> => {
+  const signup = async (
+    email: string,
+    password?: string,
+    name?: string,
+    role?: UserRole,
+    employeeId?: string
+  ): Promise<boolean> => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    const userRole = role || 'doctor';
+    const userName = name || email.split('@')[0].toUpperCase();
 
-    if (role === 'admin') {
+    if (userRole === 'admin') {
       setIsLoading(false);
       throw new Error('Admin privileges must be provisioned through secure administrator authorization.');
     }
 
-    const newUser: UserProfile = {
-      id: `user-${Date.now()}`,
-      email,
-      name,
-      role,
-      department: 'Hospital Staff',
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      if (isFirebaseConfigured() && auth && password) {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const fbUser = userCredential.user;
 
-    setUser(newUser);
-    setIsLoading(false);
+        const newProfile: UserProfile = {
+          id: fbUser.uid,
+          email,
+          name: userName,
+          role: userRole,
+          employeeId: employeeId || (userRole === 'receptionist' ? 'REC001' : undefined),
+          department: userRole === 'receptionist' ? 'Admissions & Desk' : 'Clinical Operations',
+          createdAt: new Date().toISOString()
+        };
+
+        if (rtdb) {
+          await set(ref(rtdb, `users/${fbUser.uid}`), newProfile).catch((err) =>
+            console.warn('Could not save user profile to RTDB:', err)
+          );
+        }
+
+        setUser(newProfile);
+        setIsLoading(false);
+        return true;
+      }
+
+      // Demo signup fallback
+      const newUser: UserProfile = {
+        id: `user-${Date.now()}`,
+        email,
+        name: userName,
+        role: userRole,
+        employeeId: employeeId || (userRole === 'receptionist' ? 'REC001' : undefined),
+        department: userRole === 'receptionist' ? 'Admissions & Desk' : 'Hospital Staff',
+        createdAt: new Date().toISOString()
+      };
+
+      setUser(newUser);
+      setIsLoading(false);
+      return true;
+    } catch (error: any) {
+      setIsLoading(false);
+      if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
+        throw new Error('Email/Password Sign-Up is not enabled in Firebase Console yet. Go to Firebase Console -> Authentication -> Sign-in method and enable Email/Password.');
+      }
+      throw new Error(error.message || 'Firebase sign up failed.');
+    }
+  };
+
+  const resetPassword = async (email: string): Promise<boolean> => {
+    if (!email) throw new Error('Please enter your account email address.');
+    if (isFirebaseConfigured() && auth) {
+      await sendPasswordResetEmail(auth, email);
+      return true;
+    }
+    // Simulation fallback
     return true;
   };
 
@@ -98,7 +296,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         signup,
-        logout,
+        resetPassword,
+        logout
       }}
     >
       {children}

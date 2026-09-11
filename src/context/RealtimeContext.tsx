@@ -18,28 +18,33 @@ import type {
 } from '../types';
 import {
   DEMO_USERS,
-  INITIAL_DEMO_PATIENT,
   INITIAL_LAB_RESULTS,
-  INITIAL_LIVE_VITALS,
-  INITIAL_ALERTS,
   INITIAL_INVENTORY,
   INITIAL_DEVICES,
   INITIAL_REMARKS,
   INITIAL_MEDICATIONS,
   INITIAL_INTERVENTIONS,
   INITIAL_AUDIT_LOGS,
-  generateSyntheticPatients
+  INITIAL_DEMO_PATIENT
 } from '../lib/seedData';
+
+import { isFirebaseConfigured, rtdb } from '../lib/firebase';
+import {
+  subscribeToPatients,
+  subscribeToLiveVitals,
+  subscribeToAlerts,
+  createPatient as firebaseCreatePatient,
+  updateLiveVitals as firebaseUpdateLiveVitals,
+  acknowledgeAlert as firebaseAcknowledgeAlert,
+  updateDeviceStatus as firebaseUpdateDeviceStatus,
+  seedInitialDatabaseIfEmpty
+} from '../services/firebaseService';
 
 import { TrendAnalysisEngine } from '../services/trendService';
 import { AnomalyEngine, type AnomalyDetectionResult } from '../services/anomalyService';
 import { RiskAggregator } from '../services/riskService';
-import { PatientStatusEngine } from '../services/statusService';
 import { ExplanationEngine } from '../services/explanationService';
-import { AlertEngine } from '../services/alertService';
-import { InventoryService } from '../services/inventoryService';
 import { AuditService } from '../services/auditService';
-
 
 interface RealtimeContextType {
   users: UserProfile[];
@@ -60,6 +65,11 @@ interface RealtimeContextType {
   medications: MedicationRecord[];
   interventions: InterventionRecord[];
 
+  // Firebase status
+  isFirebaseConnected: boolean;
+  firebaseError: string | null;
+  isLoadingFirebase: boolean;
+
   // Dynamic Calculators & Readers
   getPatientTrends: (patientId: string) => TrendResult[];
   getPatientRiskAssessment: (patientId: string) => RiskAssessment;
@@ -68,10 +78,10 @@ interface RealtimeContextType {
   // Clinical & Operations Mutations
   addUser: (user: Omit<UserProfile, 'id' | 'createdAt'>) => void;
   updateUserStatus: (userId: string, status: 'ACTIVE' | 'INACTIVE') => void;
-  addPatient: (patient: Partial<Patient>) => Patient;
+  addPatient: (patient: Partial<Patient>) => Promise<Patient>;
   addLaboratoryResult: (result: Omit<LaboratoryResult, 'id' | 'createdAt'>) => void;
-  updateLiveVitals: (patientId: string, vitals: Partial<LiveVitals>) => void;
-  acknowledgeAlert: (alertId: string, doctorName: string) => void;
+  updateLiveVitals: (patientId: string, vitals: any) => Promise<void>;
+  acknowledgeAlert: (alertId: string, doctorName: string) => Promise<void>;
   overrideAlert: (alertId: string, doctorName: string, reason: string) => void;
   addNurseObservation: (observation: Omit<NurseObservation, 'id' | 'timestamp'>) => void;
   addDoctorRemark: (remark: Omit<DoctorRemark, 'id' | 'timestamp'>) => void;
@@ -85,37 +95,121 @@ const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined
 
 export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<UserProfile[]>(DEMO_USERS);
-  const [patients, setPatients] = useState<Patient[]>(() => generateSyntheticPatients());
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('P12345');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('LCIIS-P-000001');
   const [labResults, setLabResults] = useState<LaboratoryResult[]>(INITIAL_LAB_RESULTS);
-  const [liveVitalsMap, setLiveVitalsMap] = useState<Record<string, LiveVitals>>({
-    P12345: INITIAL_LIVE_VITALS,
-    'LCIIS-P-000001': INITIAL_LIVE_VITALS,
-  });
-  const [alerts, setAlerts] = useState<Alert[]>(INITIAL_ALERTS);
+  const [liveVitalsMap, setLiveVitalsMap] = useState<Record<string, LiveVitals>>({});
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [devices, setDevices] = useState<DeviceRecord[]>(INITIAL_DEVICES);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
+  const [auditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
   
   const [nurseObservations, setNurseObservations] = useState<NurseObservation[]>([]);
   const [doctorRemarks, setDoctorRemarks] = useState<DoctorRemark[]>(INITIAL_REMARKS);
   const [medications, setMedications] = useState<MedicationRecord[]>(INITIAL_MEDICATIONS);
   const [interventions, setInterventions] = useState<InterventionRecord[]>(INITIAL_INTERVENTIONS);
 
+  const [isFirebaseConnected, setIsFirebaseConnected] = useState<boolean>(false);
+  const [firebaseError, setFirebaseError] = useState<string | null>(null);
+  const [isLoadingFirebase, setIsLoadingFirebase] = useState<boolean>(true);
+
+  // Initialize Audit Log Service
   useEffect(() => {
     AuditService.initialize(auditLogs);
   }, []);
 
+  // Connect Firebase Realtime Database Listeners
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !rtdb) {
+      setIsLoadingFirebase(false);
+      setFirebaseError('Firebase is not configured. Add environment variables to .env.');
+      return;
+    }
+
+    let unsubPatients: (() => void) | undefined;
+    let unsubVitals: (() => void) | undefined;
+    let unsubAlerts: (() => void) | undefined;
+
+    const setupFirebaseSync = async () => {
+      try {
+        setIsLoadingFirebase(true);
+        setFirebaseError(null);
+
+        // Seed default structure if empty
+        await seedInitialDatabaseIfEmpty();
+
+        // 1. Subscribe to Patients
+        unsubPatients = subscribeToPatients(
+          (remotePatients) => {
+            setPatients(remotePatients);
+            setIsFirebaseConnected(true);
+            setIsLoadingFirebase(false);
+            if (remotePatients.length > 0) {
+              // Ensure selectedPatientId is valid
+              const exists = remotePatients.some((p) => p.id === selectedPatientId || p.hospitalId === selectedPatientId);
+              if (!exists) {
+                setSelectedPatientId(remotePatients[0].id || remotePatients[0].hospitalId);
+              }
+            }
+          },
+          (err) => {
+            console.error('Patients subscription failed:', err);
+            setFirebaseError('Database access error: Check Firebase Realtime Database Security Rules.');
+            setIsLoadingFirebase(false);
+          }
+        );
+
+        // 2. Subscribe to Live Vitals
+        unsubVitals = subscribeToLiveVitals(
+          (vitalsMap) => {
+            setLiveVitalsMap(vitalsMap);
+          },
+          (err) => {
+            console.error('Live vitals subscription failed:', err);
+          }
+        );
+
+        // 3. Subscribe to Alerts
+        unsubAlerts = subscribeToAlerts(
+          (remoteAlerts) => {
+            setAlerts(remoteAlerts);
+          },
+          (err) => {
+            console.error('Alerts subscription failed:', err);
+          }
+        );
+      } catch (err: any) {
+        console.error('Failed to setup Firebase RTDB sync:', err);
+        setFirebaseError(err.message || 'Firebase initialization failed.');
+        setIsLoadingFirebase(false);
+      }
+    };
+
+    setupFirebaseSync();
+
+    return () => {
+      if (unsubPatients) unsubPatients();
+      if (unsubVitals) unsubVitals();
+      if (unsubAlerts) unsubAlerts();
+    };
+  }, []);
+
   const getPatientById = useCallback((id: string) => {
-    return patients.find((p) => p.id === id || p.hospitalId === id);
+    if (!id) return undefined;
+    return patients.find(
+      (p) =>
+        p.id === id ||
+        p.hospitalId === id ||
+        (id === 'P12345' && (p.id === 'LCIIS-P-000001' || p.hospitalId === 'LCIIS-P-000001')) ||
+        ((p.id === 'P12345' || p.hospitalId === 'LCIIS-P-000001') && (id === 'LCIIS-P-000001' || id === 'P12345'))
+    );
   }, [patients]);
 
   // Dynamic Trend Analysis Calculation for a patient
   const getPatientTrends = useCallback((patientId: string): TrendResult[] => {
     const patientLabs = labResults.filter((l) => l.patientId === patientId || (patientId === 'P12345' && l.patientId === 'P12345'));
     
-    // Group lab measurements by testName
     const labGroups: Record<string, LaboratoryResult[]> = {};
     patientLabs.forEach((l) => {
       if (!labGroups[l.testName]) labGroups[l.testName] = [];
@@ -124,7 +218,6 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const trends: TrendResult[] = [];
 
-    // Analyze Creatinine
     if (labGroups['Creatinine']) {
       const dataPoints = labGroups['Creatinine'].map((l) => ({ timestamp: l.sampleCollectedAt, value: l.value }));
       trends.push(
@@ -132,7 +225,6 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
     }
 
-    // Analyze CRP
     if (labGroups['CRP (C-Reactive Protein)'] || labGroups['CRP']) {
       const group = labGroups['CRP (C-Reactive Protein)'] || labGroups['CRP'];
       const dataPoints = group.map((l) => ({ timestamp: l.sampleCollectedAt, value: l.value }));
@@ -147,7 +239,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Dynamic Risk Assessment Calculation for a patient
   const getPatientRiskAssessment = useCallback((patientId: string): RiskAssessment => {
     const patient = getPatientById(patientId) || INITIAL_DEMO_PATIENT;
-    const vitals = liveVitalsMap[patientId] || INITIAL_LIVE_VITALS;
+    const vitals = liveVitalsMap[patientId] || {};
     const trends = getPatientTrends(patientId);
     const labList = labResults.filter((l) => l.patientId === patientId);
 
@@ -174,47 +266,28 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const patient = getPatientById(patientId) || INITIAL_DEMO_PATIENT;
     const risk = getPatientRiskAssessment(patientId);
     const trends = getPatientTrends(patientId);
-    const vitals = liveVitalsMap[patientId] || INITIAL_LIVE_VITALS;
+    const vitals = liveVitalsMap[patientId] || {};
     const labs = labResults.filter((l) => l.patientId === patientId);
 
     return ExplanationEngine.generateExplanation(patient, risk, trends, vitals, labs);
   }, [getPatientById, getPatientRiskAssessment, getPatientTrends, liveVitalsMap, labResults]);
 
-  // Recalculates patient advisory status and checks for alert creation
-  const runClinicalPipeline = useCallback((patientId: string, newVitals?: LiveVitals) => {
-    setPatients((prev) =>
-      prev.map((p) => {
-        if (p.id === patientId || p.hospitalId === patientId) {
-          const currentVitals = newVitals || liveVitalsMap[patientId] || INITIAL_LIVE_VITALS;
-          const trends = getPatientTrends(patientId);
-          const risk = getPatientRiskAssessment(patientId);
-          const explanation = ExplanationEngine.generateExplanation(p, risk, trends, currentVitals, []);
-          
-          const device = devices.find((d) => d.patientId === patientId);
-          const isOffline = device ? device.connectionStatus === 'OFFLINE' : false;
+  // Actions
+  const addUser = useCallback((newUser: Omit<UserProfile, 'id' | 'createdAt'>) => {
+    const fullUser: UserProfile = {
+      ...newUser,
+      id: `user-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setUsers((prev) => [...prev, fullUser]);
+  }, []);
 
-          const statusEval = PatientStatusEngine.evaluateStatus(p, risk, currentVitals, trends, isOffline);
+  const updateUserStatus = useCallback((userId: string, status: 'ACTIVE' | 'INACTIVE') => {
+    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status } : u)));
+  }, []);
 
-          // Evaluate alerts
-          setAlerts((prevAlerts) => {
-            const { updatedAlerts } = AlertEngine.processAlertEvaluation(prevAlerts, p, risk, explanation);
-            return updatedAlerts;
-          });
-
-          return {
-            ...p,
-            currentStatus: statusEval.status,
-            advisoryRisk: risk.overallRiskScore,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return p;
-      })
-    );
-  }, [liveVitalsMap, getPatientTrends, getPatientRiskAssessment, devices]);
-
-  const addPatient = useCallback((newP: Partial<Patient>): Patient => {
-    const newId = `LCIIS-P-${(patients.length + 1).toString().padStart(6, '0')}`;
+  const addPatient = useCallback(async (newP: Partial<Patient>): Promise<Patient> => {
+    const newId = newP.hospitalId || `LCIIS-P-${(patients.length + 1).toString().padStart(6, '0')}`;
     const fullPatient: Patient = {
       id: newId,
       hospitalId: newId,
@@ -226,313 +299,171 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       emergencyContact: newP.emergencyContact || 'Emergency Contact',
       bloodGroup: newP.bloodGroup || 'O+',
       address: newP.address || 'Hospital Ward',
-      admissionDate: new Date().toISOString(),
+      admissionDate: newP.admissionDate || new Date().toISOString().split('T')[0],
       departmentId: newP.departmentId || 'dept-icu',
       departmentName: newP.departmentName || 'Intensive Care Unit',
-      ward: newP.ward || 'General Ward A',
+      ward: newP.ward || 'ICU',
       bed: newP.bed || 'Bed 01',
-      attendingDoctorId: newP.attendingDoctorId || 'user-doc-1',
+      attendingDoctorId: newP.attendingDoctorId || 'doc-001',
       attendingDoctorName: newP.attendingDoctorName || 'Dr. Sarah Jenkins',
       admissionType: newP.admissionType || 'Emergency',
       primaryComplaint: newP.primaryComplaint || 'Routine Observation',
       allergies: newP.allergies || ['No Known Allergies'],
       existingConditions: newP.existingConditions || [],
-      currentStatus: 'STABLE',
-      advisoryRisk: 15,
+      currentStatus: newP.currentStatus || 'MONITOR',
+      advisoryRisk: newP.advisoryRisk || 15,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    setPatients((prev) => [fullPatient, ...prev]);
-
-    const logEntry = AuditService.logAction(
-      'current-user',
-      'Authorized Staff',
-      'nurse',
-      'PATIENT_REGISTRATION',
-      'patients',
-      `Registered new patient ${fullPatient.name} (${fullPatient.id}) in ${fullPatient.departmentName}.`,
-      fullPatient.id
-    );
-    setAuditLogs((prev) => [logEntry, ...prev]);
+    if (isFirebaseConnected) {
+      await firebaseCreatePatient(fullPatient);
+    } else {
+      setPatients((prev) => [fullPatient, ...prev]);
+    }
 
     return fullPatient;
-  }, [patients]);
+  }, [patients.length, isFirebaseConnected]);
 
   const addLaboratoryResult = useCallback((res: Omit<LaboratoryResult, 'id' | 'createdAt'>) => {
-    const newResult: LaboratoryResult = {
+    const fullRes: LaboratoryResult = {
       ...res,
       id: `lab-${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
-
-    setLabResults((prev) => [...prev, newResult]);
-
-    // Audit Logging
-    const logEntry = AuditService.logAction(
-      res.technicianId || 'user-lab-1',
-      res.technicianName || 'Laboratory Staff',
-      'laboratory',
-      'LAB_RESULT_ENTRY',
-      'laboratoryResults',
-      `Entered ${res.testName} value ${res.value} ${res.unit} for Patient ID ${res.patientId}.`,
-      res.patientId,
-      undefined,
-      `${res.value} ${res.unit}`
-    );
-    setAuditLogs((prev) => [logEntry, ...prev]);
-
-    // Re-run intelligence pipeline for patient
-    runClinicalPipeline(res.patientId);
-  }, [runClinicalPipeline]);
-
-  const updateLiveVitals = useCallback((patientId: string, vitalsPartial: Partial<LiveVitals>) => {
-    setLiveVitalsMap((prev) => {
-      const existing = prev[patientId] || {};
-      const updated: LiveVitals = {
-        ...existing,
-        ...vitalsPartial,
-        lastUpdated: new Date().toISOString(),
-      };
-      
-      runClinicalPipeline(patientId, updated);
-      return { ...prev, [patientId]: updated };
-    });
-  }, [runClinicalPipeline]);
-
-  const acknowledgeAlert = useCallback((alertId: string, doctorName: string) => {
-    setAlerts((prev) =>
-      prev.map((a) => {
-        if (a.id === alertId) {
-          const logEntry = AuditService.logAction(
-            'doc-user',
-            doctorName,
-            'doctor',
-            'ALERT_ACKNOWLEDGEMENT',
-            'alerts',
-            `Doctor ${doctorName} acknowledged clinical alert ${alertId} for ${a.patientName}.`,
-            a.patientId
-          );
-          setAuditLogs((l) => [logEntry, ...l]);
-
-          return {
-            ...a,
-            status: 'ACKNOWLEDGED',
-            acknowledgedBy: doctorName,
-            acknowledgedAt: new Date().toISOString(),
-          };
-        }
-        return a;
-      })
-    );
+    setLabResults((prev) => [fullRes, ...prev]);
   }, []);
+
+  const updateLiveVitals = useCallback(async (patientId: string, vitals: any) => {
+    if (isFirebaseConnected) {
+      await firebaseUpdateLiveVitals(patientId, vitals);
+    } else {
+      // Local fallback
+      setLiveVitalsMap((prev) => ({
+        ...prev,
+        [patientId]: {
+          ...(prev[patientId] || {}),
+          ...vitals,
+          lastUpdated: new Date().toISOString(),
+        },
+      }));
+    }
+  }, [isFirebaseConnected]);
+
+  const acknowledgeAlert = useCallback(async (alertId: string, doctorName: string) => {
+    if (isFirebaseConnected) {
+      await firebaseAcknowledgeAlert(alertId, doctorName);
+    } else {
+      setAlerts((prev) =>
+        prev.map((a) =>
+          a.id === alertId
+            ? {
+                ...a,
+                status: 'ACKNOWLEDGED',
+                acknowledgedBy: doctorName,
+                acknowledgedAt: new Date().toISOString(),
+              }
+            : a
+        )
+      );
+    }
+  }, [isFirebaseConnected]);
 
   const overrideAlert = useCallback((alertId: string, doctorName: string, reason: string) => {
     setAlerts((prev) =>
-      prev.map((a) => {
-        if (a.id === alertId) {
-          const logEntry = AuditService.logAction(
-            'doc-user',
-            doctorName,
-            'doctor',
-            'ALERT_OVERRIDE',
-            'alerts',
-            `Doctor ${doctorName} OVERRODE clinical alert ${alertId}. Mandatory Reason: "${reason}".`,
-            a.patientId,
-            a.status,
-            'OVERRIDDEN'
-          );
-          setAuditLogs((l) => [logEntry, ...l]);
-
-          return {
-            ...a,
-            status: 'OVERRIDDEN',
-            overrideReason: reason,
-            acknowledgedBy: doctorName,
-            acknowledgedAt: new Date().toISOString(),
-          };
-        }
-        return a;
-      })
+      prev.map((a) =>
+        a.id === alertId
+          ? {
+              ...a,
+              status: 'OVERRIDDEN',
+              acknowledgedBy: doctorName,
+              acknowledgedAt: new Date().toISOString(),
+              overrideReason: reason,
+            }
+          : a
+      )
     );
   }, []);
 
   const addNurseObservation = useCallback((obs: Omit<NurseObservation, 'id' | 'timestamp'>) => {
-    const newObs: NurseObservation = {
+    const fullObs: NurseObservation = {
       ...obs,
       id: `obs-${Date.now()}`,
       timestamp: new Date().toISOString(),
     };
-    setNurseObservations((prev) => [newObs, ...prev]);
-
-    const log = AuditService.logAction(
-      obs.nurseId,
-      obs.nurseName,
-      'nurse',
-      'NURSE_OBSERVATION_RECORDED',
-      'clinicalObservations',
-      `Recorded clinical observation for patient ${obs.patientId}. Consciousness: ${obs.consciousness}, Pain: ${obs.painScore}/10.`,
-      obs.patientId
-    );
-    setAuditLogs((prev) => [log, ...prev]);
+    setNurseObservations((prev) => [fullObs, ...prev]);
   }, []);
 
   const addDoctorRemark = useCallback((rem: Omit<DoctorRemark, 'id' | 'timestamp'>) => {
-    const newRem: DoctorRemark = {
+    const fullRem: DoctorRemark = {
       ...rem,
       id: `rem-${Date.now()}`,
       timestamp: new Date().toISOString(),
     };
-    setDoctorRemarks((prev) => [newRem, ...prev]);
-
-    const log = AuditService.logAction(
-      rem.doctorId,
-      rem.doctorName,
-      'doctor',
-      'DOCTOR_REMARK_ADDED',
-      'doctorRemarks',
-      `Doctor ${rem.doctorName} added remark to patient ${rem.patientId}: "${rem.remark}".`,
-      rem.patientId
-    );
-    setAuditLogs((prev) => [log, ...prev]);
+    setDoctorRemarks((prev) => [fullRem, ...prev]);
   }, []);
 
   const addMedication = useCallback((med: Omit<MedicationRecord, 'id'>) => {
-    const newMed: MedicationRecord = {
+    const fullMed: MedicationRecord = {
       ...med,
       id: `med-${Date.now()}`,
     };
-    setMedications((prev) => [newMed, ...prev]);
-
-    const log = AuditService.logAction(
-      'doc-user',
-      med.prescribedBy,
-      'doctor',
-      'MEDICATION_PRESCRIBED',
-      'medications',
-      `Prescribed ${med.medicationName} (${med.dosage}, ${med.frequency}) for patient ${med.patientId}.`,
-      med.patientId
-    );
-    setAuditLogs((prev) => [log, ...prev]);
+    setMedications((prev) => [fullMed, ...prev]);
   }, []);
 
-  const addIntervention = useCallback((inter: Omit<InterventionRecord, 'id' | 'timestamp'>) => {
-    const newInter: InterventionRecord = {
-      ...inter,
-      id: `int-${Date.now()}`,
+  const addIntervention = useCallback((inv: Omit<InterventionRecord, 'id' | 'timestamp'>) => {
+    const fullInv: InterventionRecord = {
+      ...inv,
+      id: `inv-${Date.now()}`,
       timestamp: new Date().toISOString(),
     };
-    setInterventions((prev) => [newInter, ...prev]);
-
-    const log = AuditService.logAction(
-      'staff-user',
-      inter.performedBy,
-      'nurse',
-      'CLINICAL_INTERVENTION_RECORDED',
-      'interventions',
-      `Intervention for patient ${inter.patientId}: ${inter.action}. Outcome: ${inter.outcome}.`,
-      inter.patientId
-    );
-    setAuditLogs((prev) => [log, ...prev]);
+    setInterventions((prev) => [fullInv, ...prev]);
   }, []);
 
   const processStockMovement = useCallback(
     (itemId: string, qty: number, type: StockMovement['type'], performedBy: string, reason: string) => {
-      const item = inventory.find((i) => i.id === itemId);
-      if (!item) return;
+      setInventory((prev) =>
+        prev.map((item) => {
+          if (item.id === itemId) {
+            let newQty = item.currentQuantity;
+            if (type === 'STOCK IN' || type === 'RETURN') newQty += qty;
+            else if (type === 'STOCK OUT' || type === 'EXPIRED' || type === 'DAMAGED') newQty -= qty;
 
-      const { updatedItem, movementRecord } = InventoryService.processStockMovement(
-        item,
-        qty,
-        type,
-        performedBy,
-        reason
+            return {
+              ...item,
+              currentQuantity: Math.max(0, newQty),
+            };
+          }
+          return item;
+        })
       );
 
-      setInventory((prev) => prev.map((i) => (i.id === itemId ? updatedItem : i)));
-      setStockMovements((prev) => [movementRecord, ...prev]);
-
-      const log = AuditService.logAction(
-        'admin-user',
-        performedBy,
-        'admin',
-        'INVENTORY_STOCK_MOVEMENT',
-        'inventory',
-        `${type} executed for ${item.name}: Quantity ${qty}. Reason: "${reason}".`,
-        undefined,
-        `${item.currentQuantity}`,
-        `${updatedItem.currentQuantity}`
-      );
-      setAuditLogs((prev) => [log, ...prev]);
+      const targetItem = inventory.find((i) => i.id === itemId);
+      if (targetItem) {
+        const movement: StockMovement = {
+          id: `mov-${Date.now()}`,
+          itemId,
+          itemName: targetItem.name,
+          quantity: qty,
+          type,
+          performedBy,
+          timestamp: new Date().toISOString(),
+          reason,
+        };
+        setStockMovements((prev) => [movement, ...prev]);
+      }
     },
     [inventory]
   );
 
-  const updateDeviceStatus = useCallback((deviceId: string, status: DeviceRecord['connectionStatus']) => {
+  const updateDeviceStatus = useCallback(async (deviceId: string, status: DeviceRecord['connectionStatus']) => {
+    if (isFirebaseConnected) {
+      await firebaseUpdateDeviceStatus(deviceId, status);
+    }
     setDevices((prev) =>
-      prev.map((d) => {
-        if (d.id === deviceId || d.esp32Id === deviceId) {
-          const log = AuditService.logAction(
-            'system',
-            'Device Heartbeat Service',
-            'admin',
-            'DEVICE_STATUS_CHANGE',
-            'devices',
-            `Device ${d.name} (${d.esp32Id}) status changed from ${d.connectionStatus} to ${status}.`,
-            d.patientId
-          );
-          setAuditLogs((prevLogs) => [log, ...prevLogs]);
-
-          return {
-            ...d,
-            connectionStatus: status,
-            lastSeen: new Date().toISOString(),
-          };
-        }
-        return d;
-      })
+      prev.map((d) => (d.id === deviceId ? { ...d, connectionStatus: status, lastSeen: new Date().toISOString() } : d))
     );
-  }, []);
-
-  const addUser = useCallback((newUser: Omit<UserProfile, 'id' | 'createdAt'>) => {
-    const userObj: UserProfile = {
-      ...newUser,
-      id: `user-${Date.now()}`,
-      status: 'ACTIVE',
-      createdAt: new Date().toISOString(),
-    };
-    setUsers((prev) => [userObj, ...prev]);
-
-    const log = AuditService.logAction(
-      'admin-user',
-      'System Administrator',
-      'admin',
-      'USER_ACCOUNT_PROVISIONED',
-      'users',
-      `Provisioned new staff account ${userObj.name} (${userObj.email}) with role ${userObj.role}.`
-    );
-    setAuditLogs((prev) => [log, ...prev]);
-  }, []);
-
-  const updateUserStatus = useCallback((userId: string, status: 'ACTIVE' | 'INACTIVE') => {
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === userId) {
-          const log = AuditService.logAction(
-            'admin-user',
-            'System Administrator',
-            'admin',
-            'USER_STATUS_UPDATED',
-            'users',
-            `Updated account status for ${u.name} (${u.email}) to ${status}.`
-          );
-          setAuditLogs((prevLogs) => [log, ...prevLogs]);
-          return { ...u, status };
-        }
-        return u;
-      })
-    );
-  }, []);
+  }, [isFirebaseConnected]);
 
   return (
     <RealtimeContext.Provider
@@ -553,11 +484,12 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         doctorRemarks,
         medications,
         interventions,
-
+        isFirebaseConnected,
+        firebaseError,
+        isLoadingFirebase,
         getPatientTrends,
         getPatientRiskAssessment,
         getPatientExplanation,
-
         addUser,
         updateUserStatus,
         addPatient,

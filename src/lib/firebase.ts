@@ -3,7 +3,6 @@ import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getDatabase, type Database } from 'firebase/database';
 
-
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
@@ -37,11 +36,14 @@ if (isFirebaseConfigured()) {
     auth = getAuth(app);
     db = getFirestore(app);
     rtdb = getDatabase(app);
+    console.log('✅ Firebase initialized successfully with project:', firebaseConfig.projectId);
   } catch (err) {
-    console.warn('Firebase initialization error, fallback activated:', err);
+    console.error('⚠️ Firebase initialization error:', err);
   }
 } else {
-  console.info('ℹ️ Firebase environment variables not detected. Operating with LCIIS Reactive Engine.');
+  console.info('ℹ️ Firebase environment variables missing or incomplete.');
 }
 
-export { app, auth, db, rtdb };
+const database = rtdb;
+
+export { app, auth, db, rtdb, database };

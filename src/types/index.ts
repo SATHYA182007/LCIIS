@@ -1,16 +1,17 @@
-export type UserRole = 'nurse' | 'doctor' | 'laboratory' | 'admin';
+export type UserRole = 'receptionist' | 'nurse' | 'doctor' | 'laboratory' | 'admin';
 
 export interface UserProfile {
   id: string;
   email: string;
   name: string;
   role: UserRole;
+  employeeId?: string;
   department?: string;
   status?: 'ACTIVE' | 'INACTIVE';
   createdAt: string;
 }
 
-export type PatientStatus = 'STABLE' | 'MONITOR' | 'HIGH RISK' | 'CRITICAL' | 'INSUFFICIENT DATA';
+export type PatientStatus = 'Registered' | 'Under Care' | 'STABLE' | 'MONITOR' | 'HIGH RISK' | 'CRITICAL' | 'INSUFFICIENT DATA' | 'Discharged';
 
 export interface Patient {
   id: string;
@@ -21,8 +22,11 @@ export interface Patient {
   gender: 'Male' | 'Female' | 'Other';
   phone: string;
   emergencyContact: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
   bloodGroup: string;
   address: string;
+  email?: string;
   admissionDate: string;
   departmentId: string;
   departmentName: string;
@@ -30,12 +34,16 @@ export interface Patient {
   bed: string;
   attendingDoctorId: string;
   attendingDoctorName: string;
-  admissionType: 'Emergency' | 'Elective' | 'Transfer' | 'ICU Admission';
+  admissionType: 'Emergency' | 'Elective' | 'Transfer' | 'ICU Admission' | 'Outpatient Registration';
   primaryComplaint: string;
   allergies: string[];
   existingConditions: string[];
+  emergencyNotes?: string;
   currentStatus: PatientStatus;
+  status?: PatientStatus;
   advisoryRisk: number; // 0-100
+  registeredBy?: string;
+  registeredAt?: string;
   deviceId?: string;
   createdAt: string;
   updatedAt: string;

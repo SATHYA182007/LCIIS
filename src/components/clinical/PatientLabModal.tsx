@@ -54,7 +54,12 @@ export const PatientLabModal: React.FC<PatientLabModalProps> = ({ patientId, isO
 
   // Filter lab results for this patient
   const patientLabs = labResults.filter(
-    (l) => l.patientId === patientId || (patientId === 'P12345' && l.patientId === 'P12345')
+    (l) =>
+      l.patientId === patientId ||
+      l.patientId === patient.id ||
+      l.patientId === patient.hospitalId ||
+      ((patientId === 'P12345' || patientId === 'LCIIS-P-000001' || patient.hospitalId === 'LCIIS-P-000001') &&
+        (l.patientId === 'P12345' || l.patientId === 'LCIIS-P-000001'))
   );
 
   const availableTestNames = Array.from(new Set(patientLabs.map((l) => l.testName)));
