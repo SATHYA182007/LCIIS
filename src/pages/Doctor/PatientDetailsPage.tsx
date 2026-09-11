@@ -271,36 +271,100 @@ export const PatientDetailsPage: React.FC = () => {
           {/* Changes Over Time Cards */}
           <div className="card-clinical p-5 bg-white space-y-3">
             <h3 className="text-sm font-bold text-slate-900">CHANGES OVER TIME</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-gray-500 font-medium">Creatinine</div>
-                <div className="font-bold text-slate-900 text-sm mt-0.5">0.9 → 1.3 mg/dL</div>
-                <div className="text-orange-700 font-bold flex items-center mt-1">
-                  <TrendingUp className="w-3.5 h-3.5 mr-1" /> Increasing
+            {patientLabs.length >= 2 || (vitals?.spo2?.value && vitals.spo2.value < 95) || (vitals?.heartRate?.value && vitals.heartRate.value > 100) ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                {(() => {
+                  const dynamicCards: React.ReactNode[] = [];
+                  const labGroups: Record<string, typeof patientLabs> = {};
+                  patientLabs.forEach((l) => {
+                    if (!labGroups[l.testName]) labGroups[l.testName] = [];
+                    labGroups[l.testName].push(l);
+                  });
+
+                  Object.entries(labGroups).forEach(([testName, group]) => {
+                    if (group.length >= 2) {
+                      const sorted = [...group].sort(
+                        (a, b) => new Date(a.sampleCollectedAt).getTime() - new Date(b.sampleCollectedAt).getTime()
+                      );
+                      const initial = sorted[0].value;
+                      const latest = sorted[sorted.length - 1].value;
+                      const unit = sorted[0].unit || '';
+                      const dir = latest > initial ? 'Increasing' : latest < initial ? 'Decreasing' : 'Stable';
+                      const isWorsening = testName.toLowerCase().includes('creatinine') || testName.toLowerCase().includes('crp')
+                        ? latest > initial
+                        : false;
+
+                      dynamicCards.push(
+                        <div key={testName} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="text-gray-500 font-medium">{testName}</div>
+                          <div className="font-bold text-slate-900 text-sm mt-0.5">{initial} → {latest} {unit}</div>
+                          <div className={`font-bold flex items-center mt-1 ${isWorsening ? 'text-red-700' : 'text-teal-700'}`}>
+                            {dir === 'Increasing' ? <TrendingUp className="w-3.5 h-3.5 mr-1" /> : <TrendingDown className="w-3.5 h-3.5 mr-1" />} {dir}
+                          </div>
+                        </div>
+                      );
+                    }
+                  });
+
+                  if (vitals?.spo2?.value && vitals.spo2.value < 95) {
+                    dynamicCards.push(
+                      <div key="vital-spo2" className="p-3 bg-amber-50/50 rounded-lg border border-amber-200">
+                        <div className="text-gray-500 font-medium">Oxygen Level (SpO2)</div>
+                        <div className="font-bold text-slate-900 text-sm mt-0.5">Baseline → {vitals.spo2.value}%</div>
+                        <div className="text-amber-700 font-bold flex items-center mt-1">
+                          <TrendingDown className="w-3.5 h-3.5 mr-1" /> Decreasing
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (vitals?.heartRate?.value && vitals.heartRate.value > 100) {
+                    dynamicCards.push(
+                      <div key="vital-hr" className="p-3 bg-purple-50/50 rounded-lg border border-purple-200">
+                        <div className="text-gray-500 font-medium">Heart Rate</div>
+                        <div className="font-bold text-slate-900 text-sm mt-0.5">Baseline → {vitals.heartRate.value} BPM</div>
+                        <div className="text-purple-700 font-bold flex items-center mt-1">
+                          <TrendingUp className="w-3.5 h-3.5 mr-1" /> Elevated
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return dynamicCards;
+                })()}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-gray-500 font-medium">Creatinine</div>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">Baseline Normal</div>
+                  <div className="text-slate-600 font-semibold flex items-center mt-1">
+                    <Activity className="w-3.5 h-3.5 mr-1 text-teal-600" /> Stable Baseline
+                  </div>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-gray-500 font-medium">CRP</div>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">Baseline Normal</div>
+                  <div className="text-slate-600 font-semibold flex items-center mt-1">
+                    <Activity className="w-3.5 h-3.5 mr-1 text-teal-600" /> Stable Baseline
+                  </div>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-gray-500 font-medium">Oxygen Level (SpO2)</div>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">{vitals?.spo2?.value || 98}% Live</div>
+                  <div className="text-emerald-700 font-bold flex items-center mt-1">
+                    <Activity className="w-3.5 h-3.5 mr-1 text-emerald-600" /> Optimal Saturation
+                  </div>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-gray-500 font-medium">Heart Rate</div>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">{vitals?.heartRate?.value || 80} BPM</div>
+                  <div className="text-emerald-700 font-bold flex items-center mt-1">
+                    <Activity className="w-3.5 h-3.5 mr-1 text-emerald-600" /> Normal Pulse
+                  </div>
                 </div>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-gray-500 font-medium">CRP</div>
-                <div className="font-bold text-slate-900 text-sm mt-0.5">8 → 31 mg/L</div>
-                <div className="text-red-700 font-bold flex items-center mt-1">
-                  <TrendingUp className="w-3.5 h-3.5 mr-1" /> Increasing
-                </div>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-gray-500 font-medium">Oxygen Level (SpO2)</div>
-                <div className="font-bold text-slate-900 text-sm mt-0.5">98% → 92%</div>
-                <div className="text-amber-700 font-bold flex items-center mt-1">
-                  <TrendingDown className="w-3.5 h-3.5 mr-1" /> Decreasing
-                </div>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-gray-500 font-medium">Heart Rate</div>
-                <div className="font-bold text-slate-900 text-sm mt-0.5">82 → 112 BPM</div>
-                <div className="text-purple-700 font-bold flex items-center mt-1">
-                  <TrendingUp className="w-3.5 h-3.5 mr-1" /> Increasing
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Interactive Recharts Graph with Clean Parameter Selector */}
@@ -329,22 +393,30 @@ export const PatientDetailsPage: React.FC = () => {
             </div>
 
             <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={(activeVitalTab === 'creatinine' ? creatinineChartData : crpChartData) as any}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="time" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey={activeVitalTab === 'creatinine' ? 'Creatinine' : 'CRP'}
-                    stroke={activeVitalTab === 'creatinine' ? '#f97316' : '#ef4444'}
-                    strokeWidth={3}
-                    dot={{ r: 5 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {(activeVitalTab === 'creatinine' ? creatinineChartData : crpChartData).length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={(activeVitalTab === 'creatinine' ? creatinineChartData : crpChartData) as any}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="time" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey={activeVitalTab === 'creatinine' ? 'Creatinine' : 'CRP'}
+                      stroke={activeVitalTab === 'creatinine' ? '#f97316' : '#ef4444'}
+                      strokeWidth={3}
+                      dot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500">
+                  <FlaskConical className="w-8 h-8 text-slate-300 mb-2" />
+                  <p className="font-bold text-slate-700">No Longitudinal {activeVitalTab === 'creatinine' ? 'Creatinine' : 'CRP'} Readings Logged</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Laboratory data points will plot automatic trend lines here once lab results are entered.</p>
+                </div>
+              )}
             </div>
           </div>
 
