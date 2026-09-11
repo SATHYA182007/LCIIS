@@ -39,6 +39,27 @@ export const RegisterPatientPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [createdPatient, setCreatedPatient] = useState<Patient | null>(null);
 
+  const calculateAgeFromDOB = (dobString: string): string => {
+    if (!dobString) return '';
+    const dob = new Date(dobString);
+    if (isNaN(dob.getTime())) return '';
+    const today = new Date();
+    let computedAge = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      computedAge--;
+    }
+    return computedAge >= 0 ? String(computedAge) : '';
+  };
+
+  const handleDobChange = (newDob: string) => {
+    setDateOfBirth(newDob);
+    const computed = calculateAgeFromDOB(newDob);
+    if (computed !== '') {
+      setAge(computed);
+    }
+  };
+
   const wardOptions = [
     'General Ward A',
     'General Ward B',
@@ -70,7 +91,7 @@ export const RegisterPatientPage: React.FC = () => {
     { id: 'OTHER', name: '+ Enter Custom Doctor Name...', specialty: 'Custom Entry' }
   ];
 
-  // Generate unique sequential Patient ID on load
+  // Generate unique sequential Patient ID on load and calculate initial age
   useEffect(() => {
     const fetchNextId = async () => {
       setIsGeneratingId(true);
@@ -79,6 +100,9 @@ export const RegisterPatientPage: React.FC = () => {
       setIsGeneratingId(false);
     };
     fetchNextId();
+    if (dateOfBirth && !age) {
+      setAge(calculateAgeFromDOB(dateOfBirth));
+    }
   }, []);
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
@@ -309,6 +333,20 @@ export const RegisterPatientPage: React.FC = () => {
                     />
                   </div>
 
+                  {/* Date of Birth */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Date of Birth <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => handleDobChange(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                      required
+                    />
+                  </div>
+
                   {/* Age */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -318,20 +356,9 @@ export const RegisterPatientPage: React.FC = () => {
                       type="number"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
-                      placeholder="e.g. 62"
+                      placeholder="Auto-calculated from DOB (e.g. 46)"
                       className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                       required
-                    />
-                  </div>
-
-                  {/* Date of Birth */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth</label>
-                    <input
-                      type="date"
-                      value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                     />
                   </div>
 
