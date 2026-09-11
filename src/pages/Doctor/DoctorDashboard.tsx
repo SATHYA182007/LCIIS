@@ -115,7 +115,7 @@ export const DoctorDashboard: React.FC = () => {
                   </p>
                 </div>
               </div>
-            ) : (patientsNeedingAttention.length === 0 ? (
+            ) : patientsNeedingAttention.length === 0 ? (
               <div className="p-8 text-center text-gray-500 text-xs font-semibold">
                 All monitored patients are currently stable.
               </div>
