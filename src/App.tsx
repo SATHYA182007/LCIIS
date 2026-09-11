@@ -136,7 +136,7 @@ export function App() {
                 <Route
                   path="/doctor/patients/:id"
                   element={
-                    <ProtectedRoute allowedRoles={['doctor', 'admin']}>
+                    <ProtectedRoute allowedRoles={['doctor', 'nurse', 'receptionist', 'laboratory', 'admin']}>
                       <PatientDetailsPage />
                     </ProtectedRoute>
                   }
@@ -144,7 +144,7 @@ export function App() {
                 <Route
                   path="/doctor/patients/:id/labs"
                   element={
-                    <ProtectedRoute allowedRoles={['doctor', 'admin']}>
+                    <ProtectedRoute allowedRoles={['doctor', 'nurse', 'receptionist', 'laboratory', 'admin']}>
                       <PatientLabDetailsPage />
                     </ProtectedRoute>
                   }
@@ -152,7 +152,7 @@ export function App() {
                 <Route
                   path="/doctor/patients/:id/vitals"
                   element={
-                    <ProtectedRoute allowedRoles={['doctor', 'admin']}>
+                    <ProtectedRoute allowedRoles={['doctor', 'nurse', 'receptionist', 'laboratory', 'admin']}>
                       <PatientVitalsDetailsPage />
                     </ProtectedRoute>
                   }
