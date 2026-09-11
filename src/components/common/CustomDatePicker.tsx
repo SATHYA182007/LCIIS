@@ -107,8 +107,6 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
 
-  const decadePills = [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020].filter((y) => y >= minYear && y <= maxYear);
-
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {/* Interactive Trigger Input Box */}
@@ -215,24 +213,6 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             </div>
           ) : (
             <>
-              {/* Decade Quick Jump Pills */}
-              <div className="flex flex-wrap gap-1 mb-3">
-                {decadePills.map((yr) => (
-                  <button
-                    type="button"
-                    key={yr}
-                    onClick={() => setCurrentYear(yr)}
-                    className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md transition-all ${
-                      currentYear === yr
-                        ? 'bg-teal-700 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {yr}s
-                  </button>
-                ))}
-              </div>
-
               {/* Weekday Headers */}
               <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-gray-400 uppercase mb-1">
                 {DAYS_OF_WEEK.map((d) => (
