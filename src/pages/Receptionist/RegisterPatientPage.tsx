@@ -21,10 +21,12 @@ export const RegisterPatientPage: React.FC = () => {
   const [age, setAge] = useState<string>('');
   const [dateOfBirth, setDateOfBirth] = useState<string>('1980-01-01');
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Male');
-  const [phone, setPhone] = useState<string>('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState<string>('+91');
+  const [phoneDigits, setPhoneDigits] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [emergencyContactName, setEmergencyContactName] = useState<string>('');
-  const [emergencyContactPhone, setEmergencyContactPhone] = useState<string>('');
+  const [emergencyPhoneCountryCode, setEmergencyPhoneCountryCode] = useState<string>('+91');
+  const [emergencyPhoneDigits, setEmergencyPhoneDigits] = useState<string>('');
   const [bloodGroup, setBloodGroup] = useState<string>('O+');
   const [email, setEmail] = useState<string>('');
   const [ward, setWard] = useState<string>('General Ward A');
@@ -117,23 +119,29 @@ export const RegisterPatientPage: React.FC = () => {
       toast.error('Please enter a valid patient age.');
       return;
     }
-    if (!phone.trim()) {
-      toast.error('Please enter a valid contact phone number.');
+    if (phoneDigits.length !== 10) {
+      toast.error('Patient phone number must be exactly 10 digits.');
       return;
     }
     if (!address.trim()) {
       toast.error('Please enter the residential address.');
       return;
     }
-    if (!emergencyContactName.trim() || !emergencyContactPhone.trim()) {
-      toast.error('Please provide complete emergency contact details.');
+    if (!emergencyContactName.trim()) {
+      toast.error('Please enter the emergency contact name.');
+      return;
+    }
+    if (emergencyPhoneDigits.length !== 10) {
+      toast.error('Emergency contact phone number must be exactly 10 digits.');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const emergencyContactStr = `${emergencyContactName.trim()} (${emergencyContactPhone.trim()})`;
+      const fullPhone = `${phoneCountryCode} ${phoneDigits}`;
+      const fullEmergencyPhone = `${emergencyPhoneCountryCode} ${emergencyPhoneDigits}`;
+      const emergencyContactStr = `${emergencyContactName.trim()} (${fullEmergencyPhone})`;
       const conditionsList = medicalConditions.trim() ? medicalConditions.split(',').map((s) => s.trim()) : [];
       const allergiesList = allergies.trim() ? allergies.split(',').map((s) => s.trim()) : ['No Known Allergies'];
 
@@ -166,11 +174,11 @@ export const RegisterPatientPage: React.FC = () => {
         dateOfBirth,
         age: Number(age),
         gender,
-        phone: phone.trim(),
+        phone: fullPhone,
         address: address.trim(),
         emergencyContact: emergencyContactStr,
         emergencyContactName: emergencyContactName.trim(),
-        emergencyContactPhone: emergencyContactPhone.trim(),
+        emergencyContactPhone: fullEmergencyPhone,
         bloodGroup,
         email: email.trim() || undefined,
         admissionDate: new Date().toISOString().split('T')[0],
@@ -264,10 +272,10 @@ export const RegisterPatientPage: React.FC = () => {
                   onClick={() => {
                     setCreatedPatient(null);
                     setFullName('');
-                    setPhone('');
+                    setPhoneDigits('');
                     setAddress('');
                     setEmergencyContactName('');
-                    setEmergencyContactPhone('');
+                    setEmergencyPhoneDigits('');
                     setMedicalConditions('');
                     setAllergies('');
                     setEmergencyNotes('');
@@ -407,17 +415,35 @@ export const RegisterPatientPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Phone */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Patient Phone Number <span className="text-red-500">*</span>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                      <span>Patient Phone Number <span className="text-red-500">*</span></span>
+                      <span className="text-[10px] text-gray-400 font-mono">
+                        {phoneDigits.length}/10 digits
+                      </span>
                     </label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. +1 (555) 019-2834"
-                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
-                      required
-                    />
+                    <div className="flex rounded-xl shadow-xs overflow-hidden">
+                      <select
+                        value={phoneCountryCode}
+                        onChange={(e) => setPhoneCountryCode(e.target.value)}
+                        className="bg-slate-100 border border-r-0 border-gray-200 text-slate-900 font-extrabold text-xs px-2.5 py-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-hidden cursor-pointer shrink-0 rounded-l-xl"
+                      >
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+65">🇸🇬 +65</option>
+                        <option value="+61">🇦🇺 +61</option>
+                      </select>
+                      <input
+                        type="tel"
+                        value={phoneDigits}
+                        onChange={(e) => setPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        placeholder="9876543210"
+                        maxLength={10}
+                        className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-r-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden font-mono text-slate-900 tracking-wider"
+                        required
+                      />
+                    </div>
                   </div>
 
                   {/* Email */}
@@ -464,17 +490,35 @@ export const RegisterPatientPage: React.FC = () => {
 
                   {/* Emergency Contact Phone */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Emergency Contact Phone <span className="text-red-500">*</span>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                      <span>Emergency Contact Phone <span className="text-red-500">*</span></span>
+                      <span className="text-[10px] text-gray-400 font-mono">
+                        {emergencyPhoneDigits.length}/10 digits
+                      </span>
                     </label>
-                    <input
-                      type="tel"
-                      value={emergencyContactPhone}
-                      onChange={(e) => setEmergencyContactPhone(e.target.value)}
-                      placeholder="e.g. +1 (555) 019-2835"
-                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
-                      required
-                    />
+                    <div className="flex rounded-xl shadow-xs overflow-hidden">
+                      <select
+                        value={emergencyPhoneCountryCode}
+                        onChange={(e) => setEmergencyPhoneCountryCode(e.target.value)}
+                        className="bg-slate-100 border border-r-0 border-gray-200 text-slate-900 font-extrabold text-xs px-2.5 py-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-hidden cursor-pointer shrink-0 rounded-l-xl"
+                      >
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+65">🇸🇬 +65</option>
+                        <option value="+61">🇦🇺 +61</option>
+                      </select>
+                      <input
+                        type="tel"
+                        value={emergencyPhoneDigits}
+                        onChange={(e) => setEmergencyPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        placeholder="9876543210"
+                        maxLength={10}
+                        className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-r-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden font-mono text-slate-900 tracking-wider"
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
