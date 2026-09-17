@@ -37,6 +37,10 @@ import {
   subscribeToUsers,
   saveUserToDB,
   createPatient as firebaseCreatePatient,
+  updatePatientInDB,
+  deletePatientFromDB,
+  updateUserInDB,
+  deleteUserFromDB,
   updateLiveVitals as firebaseUpdateLiveVitals,
   acknowledgeAlert as firebaseAcknowledgeAlert,
   updateDeviceStatus as firebaseUpdateDeviceStatus,
@@ -80,10 +84,18 @@ interface RealtimeContextType {
 
   // Clinical & Operations Mutations
   addUser: (user: Omit<UserProfile, 'id' | 'createdAt'>) => void;
+  updateUser: (userId: string, updates: Partial<UserProfile>) => Promise<void>;
   updateUserStatus: (userId: string, status: UserAccountStatus, reason?: string) => void;
   approveUser: (userId: string, adminName?: string) => void;
   rejectUser: (userId: string) => void;
+  removeUser: (userId: string) => Promise<void>;
+  bulkRemoveUsers: (userIds: string[]) => Promise<void>;
+  bulkUpdateUsers: (userIds: string[], updates: Partial<UserProfile>) => Promise<void>;
   addPatient: (patient: Partial<Patient>) => Promise<Patient>;
+  updatePatient: (patientId: string, updates: Partial<Patient>) => Promise<void>;
+  removePatient: (patientId: string) => Promise<void>;
+  bulkRemovePatients: (patientIds: string[]) => Promise<void>;
+  bulkUpdatePatients: (patientIds: string[], updates: Partial<Patient>) => Promise<void>;
   addLaboratoryResult: (result: Omit<LaboratoryResult, 'id' | 'createdAt'>) => void;
   updateLiveVitals: (patientId: string, vitals: any) => Promise<void>;
   acknowledgeAlert: (alertId: string, doctorName: string) => Promise<void>;
@@ -430,6 +442,98 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return fullPatient;
   }, [patients.length, isFirebaseConnected]);
 
+  const updatePatient = useCallback(async (patientId: string, updates: Partial<Patient>): Promise<void> => {
+    if (isFirebaseConnected) {
+      await updatePatientInDB(patientId, updates);
+    }
+    setPatients((prev) =>
+      prev.map((p) => (p.id === patientId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p))
+    );
+  }, [isFirebaseConnected]);
+
+  const removePatient = useCallback(async (patientId: string): Promise<void> => {
+    if (isFirebaseConnected) {
+      await deletePatientFromDB(patientId);
+    }
+    setPatients((prev) => prev.filter((p) => p.id !== patientId));
+  }, [isFirebaseConnected]);
+
+  const bulkRemovePatients = useCallback(async (patientIds: string[]): Promise<void> => {
+    const idSet = new Set(patientIds);
+    if (isFirebaseConnected) {
+      for (const id of patientIds) {
+        await deletePatientFromDB(id).catch(() => {});
+      }
+    }
+    setPatients((prev) => prev.filter((p) => !idSet.has(p.id)));
+  }, [isFirebaseConnected]);
+
+  const bulkUpdatePatients = useCallback(async (patientIds: string[], updates: Partial<Patient>): Promise<void> => {
+    const idSet = new Set(patientIds);
+    if (isFirebaseConnected) {
+      for (const id of patientIds) {
+        await updatePatientInDB(id, updates).catch(() => {});
+      }
+    }
+    setPatients((prev) =>
+      prev.map((p) => (idSet.has(p.id) ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p))
+    );
+  }, [isFirebaseConnected]);
+
+  const updateUser = useCallback(async (userId: string, updates: Partial<UserProfile>): Promise<void> => {
+    if (isFirebaseConnected) {
+      await updateUserInDB(userId, updates);
+    }
+    setUsers((prev) => {
+      const updated = prev.map((u) => (u.id === userId ? { ...u, ...updates } : u));
+      localStorage.setItem('lciis_all_users', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('lciis-users-updated'));
+      return updated;
+    });
+  }, [isFirebaseConnected]);
+
+  const removeUser = useCallback(async (userId: string): Promise<void> => {
+    if (isFirebaseConnected) {
+      await deleteUserFromDB(userId);
+    }
+    setUsers((prev) => {
+      const updated = prev.filter((u) => u.id !== userId);
+      localStorage.setItem('lciis_all_users', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('lciis-users-updated'));
+      return updated;
+    });
+  }, [isFirebaseConnected]);
+
+  const bulkRemoveUsers = useCallback(async (userIds: string[]): Promise<void> => {
+    const idSet = new Set(userIds);
+    if (isFirebaseConnected) {
+      for (const id of userIds) {
+        await deleteUserFromDB(id).catch(() => {});
+      }
+    }
+    setUsers((prev) => {
+      const updated = prev.filter((u) => !idSet.has(u.id));
+      localStorage.setItem('lciis_all_users', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('lciis-users-updated'));
+      return updated;
+    });
+  }, [isFirebaseConnected]);
+
+  const bulkUpdateUsers = useCallback(async (userIds: string[], updates: Partial<UserProfile>): Promise<void> => {
+    const idSet = new Set(userIds);
+    if (isFirebaseConnected) {
+      for (const id of userIds) {
+        await updateUserInDB(id, updates).catch(() => {});
+      }
+    }
+    setUsers((prev) => {
+      const updated = prev.map((u) => (idSet.has(u.id) ? { ...u, ...updates } : u));
+      localStorage.setItem('lciis_all_users', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('lciis-users-updated'));
+      return updated;
+    });
+  }, [isFirebaseConnected]);
+
   const addLaboratoryResult = useCallback((res: Omit<LaboratoryResult, 'id' | 'createdAt'>) => {
     const fullRes: LaboratoryResult = {
       ...res,
@@ -596,10 +700,18 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         getPatientRiskAssessment,
         getPatientExplanation,
         addUser,
+        updateUser,
         updateUserStatus,
         approveUser,
         rejectUser,
+        removeUser,
+        bulkRemoveUsers,
+        bulkUpdateUsers,
         addPatient,
+        updatePatient,
+        removePatient,
+        bulkRemovePatients,
+        bulkUpdatePatients,
         addLaboratoryResult,
         updateLiveVitals,
         acknowledgeAlert,

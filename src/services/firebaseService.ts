@@ -4,6 +4,7 @@ import {
   set,
   get,
   update,
+  remove,
   onValue,
   off,
   type DataSnapshot
@@ -614,4 +615,33 @@ export const saveUserToDB = async (userProfile: any): Promise<void> => {
   const db = getRTDB();
   const userRef = ref(db, `users/${userProfile.id}`);
   await set(userRef, cleanUndefined(userProfile));
+};
+
+export const updatePatientInDB = async (patientId: string, updates: Partial<Patient>): Promise<void> => {
+  const db = getRTDB();
+  const patientRef = ref(db, `patients/${patientId}`);
+  const cleanedPayload = cleanUndefined({
+    ...updates,
+    updatedAt: new Date().toISOString()
+  });
+  await update(patientRef, cleanedPayload);
+};
+
+export const deletePatientFromDB = async (patientId: string): Promise<void> => {
+  const db = getRTDB();
+  const patientRef = ref(db, `patients/${patientId}`);
+  await remove(patientRef);
+};
+
+export const updateUserInDB = async (userId: string, updates: any): Promise<void> => {
+  const db = getRTDB();
+  const userRef = ref(db, `users/${userId}`);
+  const cleanedPayload = cleanUndefined(updates);
+  await update(userRef, cleanedPayload);
+};
+
+export const deleteUserFromDB = async (userId: string): Promise<void> => {
+  const db = getRTDB();
+  const userRef = ref(db, `users/${userId}`);
+  await remove(userRef);
 };
