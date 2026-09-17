@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import type {
   Patient,
   LaboratoryResult,
@@ -222,6 +223,13 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         unsubAlerts = subscribeToAlerts(
           (remoteAlerts) => {
             setAlerts(remoteAlerts);
+            const sosAlert = remoteAlerts.find((a) => (a.summary.includes('SOS') || a.type === 'RAPID DETERIORATION') && a.status === 'NEW');
+            if (sosAlert) {
+              toast.error('🚨 BEDSIDE EMERGENCY SOS BUTTON PRESSED!', {
+                description: `Emergency alert from ${sosAlert.ward} (${sosAlert.bed}) - Patient: ${sosAlert.patientId}`,
+                duration: 10000
+              });
+            }
           },
           (err) => {
             console.error('Alerts subscription failed:', err);
