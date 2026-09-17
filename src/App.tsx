@@ -8,7 +8,6 @@ import { SidebarProvider } from './context/SidebarContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 // Public & Shared Pages
-import { LandingPage } from './pages/Landing/LandingPage';
 import { AuthPage } from './pages/Auth/AuthPage';
 
 // Receptionist Pages
@@ -68,7 +67,7 @@ export function App() {
 
               <Routes>
                 {/* Public Authentication Routes */}
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={<Navigate to="/auth" replace />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/signin" element={<AuthPage initialMode="signin" />} />
                 <Route path="/signup" element={<AuthPage initialMode="signup" />} />
@@ -356,7 +355,7 @@ export function App() {
                 <Route path="/reports" element={<ReportsPage />} />
 
                 {/* Fallback */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to="/auth" replace />} />
               </Routes>
             </SidebarProvider>
           </SimulationProvider>

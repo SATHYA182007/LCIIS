@@ -114,7 +114,7 @@ export const Sidebar: React.FC = () => {
       >
         {/* Brand Header */}
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate(`/${role}/dashboard`)}>
             <div className="w-9 h-9 rounded-xl bg-teal-700 flex items-center justify-center text-white shadow-xs">
               <Activity className="w-5 h-5" />
             </div>

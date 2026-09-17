@@ -113,18 +113,16 @@
     background-position: 0 0;
   }
   100% {
-    background-position: 50px 50px;
+    background-position: 44px 44px;
   }
 }
 
 .bg-moving-grid {
   background-image: 
-    linear-gradient(to right, rgba(13, 148, 136, 0.24) 2.5px, transparent 2.5px),
-    linear-gradient(to bottom, rgba(13, 148, 136, 0.24) 2.5px, transparent 2.5px);
-  background-size: 50px 50px;
-  animation: moving-grid 10s linear infinite;
-  mask-image: radial-gradient(circle at 50% 40%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.65) 80%, transparent 100%);
-  -webkit-mask-image: radial-gradient(circle at 50% 40%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.65) 80%, transparent 100%);
+    linear-gradient(to right, rgba(13, 148, 136, 0.28) 2.5px, transparent 2.5px),
+    linear-gradient(to bottom, rgba(13, 148, 136, 0.28) 2.5px, transparent 2.5px);
+  background-size: 44px 44px;
+  animation: moving-grid 4s linear infinite;
 }
 
 ::-webkit-scrollbar-thumb:hover {
