@@ -1,3 +1,15 @@
+export type UserRole =
+  | 'doctor'
+  | 'nurse'
+  | 'receptionist'
+  | 'admin'
+  | 'laboratory'
+  | 'DOCTOR'
+  | 'NURSE'
+  | 'RECEPTIONIST'
+  | 'ADMIN'
+  | 'LAB_TECHNICIAN';
+
 export type UserAccountStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'FROZEN' | 'RESTRICTED' | 'REVOKED';
 
 export interface UserProfile {

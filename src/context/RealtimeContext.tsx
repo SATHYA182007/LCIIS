@@ -14,7 +14,8 @@ import type {
   InterventionRecord,
   RiskAssessment,
   TrendResult,
-  UserProfile
+  UserProfile,
+  UserAccountStatus
 } from '../types';
 import {
   DEMO_USERS,

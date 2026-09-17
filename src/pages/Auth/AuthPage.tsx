@@ -58,7 +58,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode, forcedRole }) =
   const { login, signup, resetPassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  const demoEmailMap: Record<UserRole, string> = {
+  const demoEmailMap: Partial<Record<UserRole, string>> = {
     receptionist: 'receptionist@hospital.demo',
     doctor: 'doctor@hospital.demo',
     nurse: 'nurse@hospital.demo',
@@ -71,21 +71,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode, forcedRole }) =
     setErrorMsg('');
 
     if (mode === 'signin') {
-      const emailVal = demoEmailMap[selectedRole];
+      const emailVal = demoEmailMap[selectedRole] || 'user@hospital.demo';
       setEmail(emailVal);
       setPassword('password');
       toast.info(`Autofilled ${selectedRole.toUpperCase()} credentials`, {
         description: `Email: ${emailVal} | Password: password`
       });
     } else if (mode === 'signup') {
-      const demoSignupMap: Record<UserRole, { name: string; email: string; empId: string }> = {
+      const demoSignupMap: Partial<Record<UserRole, { name: string; email: string; empId: string }>> = {
         receptionist: { name: 'Eleanor Vance', email: 'receptionist@hospital.demo', empId: 'REC001' },
         doctor: { name: 'Dr. Sarah Jenkins', email: 'doctor@hospital.demo', empId: 'DOC001' },
         nurse: { name: 'Nurse Amanda Miller', email: 'nurse@hospital.demo', empId: 'NUR001' },
         laboratory: { name: 'Alex Rivera (LIS)', email: 'lab@hospital.demo', empId: 'LAB001' },
         admin: { name: 'System Administrator', email: 'admin@hospital.demo', empId: 'ADM001' }
       };
-      const info = demoSignupMap[selectedRole];
+      const info = demoSignupMap[selectedRole] || { name: 'Staff Member', email: 'staff@hospital.demo', empId: 'STF001' };
       setName(info.name);
       setEmail(info.email);
       setEmployeeId(info.empId);
@@ -103,7 +103,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode, forcedRole }) =
     setResetSuccess(false);
 
     if (currentMode === 'signin') {
-      setEmail(demoEmailMap[initialRole]);
+      setEmail(demoEmailMap[initialRole] || 'receptionist@hospital.demo');
       setPassword('password');
     }
   }, [location.pathname, initialMode, forcedRole]);

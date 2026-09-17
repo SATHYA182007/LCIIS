@@ -18,7 +18,7 @@ import {
   Trash2,
   Shield
 } from 'lucide-react';
-import type { UserRole, UserAccountStatus } from '../../types';
+import type { UserRole } from '../../types';
 import { toast } from 'sonner';
 
 export const AdminUsersPage: React.FC = () => {
@@ -33,7 +33,7 @@ export const AdminUsersPage: React.FC = () => {
   // Form State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>('doctor');
+  const [role, setRole] = useState<UserRole>('DOCTOR');
   const [department, setDepartment] = useState('Intensive Care Unit (ICU)');
 
   const pendingUsers = users.filter((u) => u.approvalStatus === 'PENDING' || u.status === 'PENDING');
@@ -58,10 +58,9 @@ export const AdminUsersPage: React.FC = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const doctorsCount = users.filter((u) => u.role === 'doctor').length;
-  const nursesCount = users.filter((u) => u.role === 'nurse').length;
-  const labCount = users.filter((u) => u.role === 'laboratory').length;
-  const adminCount = users.filter((u) => u.role === 'admin').length;
+  const doctorsCount = users.filter((u) => u.role === 'DOCTOR' || (u.role as string) === 'doctor').length;
+  const nursesCount = users.filter((u) => u.role === 'NURSE' || (u.role as string) === 'nurse').length;
+  const labCount = users.filter((u) => u.role === 'LAB_TECHNICIAN' || (u.role as string) === 'laboratory').length;
 
   const handleAddUserSubmit = (e: React.FormEvent) => {
     e.preventDefault();
