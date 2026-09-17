@@ -231,38 +231,52 @@ export const subscribeToLiveVitals = (
     if (onError) onError(new Error('Firebase RTDB not connected'));
     return () => {};
   }
-  const vitalsRef = ref(rtdb, 'liveVitals');
-  const unsubscribe = onValue(
-    vitalsRef,
-    (snapshot: DataSnapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const map: Record<string, LiveVitals> = {};
-        
-        Object.keys(data).forEach((patientId) => {
-          const item = data[patientId];
-          if (item.structured) {
-            map[patientId] = item.structured;
-          } else {
-            const timeStr = item.lastUpdated || (item.timestamp ? new Date(item.timestamp).toISOString() : new Date().toISOString());
-            map[patientId] = {
-              heartRate: item.heartRate !== undefined ? { value: item.heartRate, unit: 'bpm', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
-              spo2: item.spo2 !== undefined ? { value: item.spo2, unit: '%', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
-              temperature: item.temperature !== undefined ? { value: item.temperature, unit: '°C', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
-              respiratoryRate: item.respiratoryRate !== undefined ? { value: item.respiratoryRate, unit: 'bpm', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
-              bloodPressure: (item.systolicBP !== undefined || item.diastolicBP !== undefined) ? {
-                systolic: { value: item.systolicBP ?? 120, unit: 'mmHg', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' },
-                diastolic: { value: item.diastolicBP ?? 80, unit: 'mmHg', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' }
-              } : undefined,
-              lastUpdated: timeStr
-            };
-          }
-        });
 
-        callback(map);
+  const map: Record<string, LiveVitals> = {};
+
+  const processVitalsData = (data: any) => {
+    if (!data) return;
+    Object.keys(data).forEach((patientId) => {
+      const item = data[patientId];
+      if (!item) return;
+
+      if (item.structured) {
+        map[patientId] = item.structured;
       } else {
-        callback({});
+        const targetObj = item.current ? item.current : item;
+        const hr = targetObj.heartRate ?? targetObj.heart_rate;
+        const spo2Val = targetObj.spo2;
+        const temp = targetObj.temperature;
+        const rr = targetObj.respiratoryRate ?? targetObj.respiratory_rate;
+        const sys = targetObj.systolicBP ?? targetObj.systolic_bp;
+        const dia = targetObj.diastolicBP ?? targetObj.diastolic_bp;
+        const timeStr = targetObj.lastUpdated || (targetObj.timestamp ? (typeof targetObj.timestamp === 'number' ? new Date(targetObj.timestamp).toISOString() : targetObj.timestamp) : new Date().toISOString());
+
+        if (hr !== undefined || spo2Val !== undefined || temp !== undefined || rr !== undefined) {
+          map[patientId] = {
+            heartRate: hr !== undefined ? { value: Number(hr), unit: 'bpm', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
+            spo2: spo2Val !== undefined ? { value: Number(spo2Val), unit: '%', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
+            temperature: temp !== undefined ? { value: Number(temp), unit: '°C', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
+            respiratoryRate: rr !== undefined ? { value: Number(rr), unit: 'bpm', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
+            bloodPressure: (sys !== undefined || dia !== undefined) ? {
+              systolic: { value: Number(sys ?? 120), unit: 'mmHg', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' },
+              diastolic: { value: Number(dia ?? 80), unit: 'mmHg', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' }
+            } : undefined,
+            lastUpdated: timeStr
+          };
+        }
       }
+    });
+  };
+
+  const vitalsRef = ref(rtdb, 'liveVitals');
+  const lciisPatientsRef = ref(rtdb, 'LCIIS/patients');
+
+  const unsubVitals = onValue(
+    vitalsRef,
+    (snapshot) => {
+      if (snapshot.exists()) processVitalsData(snapshot.val());
+      callback({ ...map });
     },
     (error) => {
       console.error('Firebase liveVitals subscription error:', error);
@@ -270,7 +284,15 @@ export const subscribeToLiveVitals = (
     }
   );
 
-  return () => off(vitalsRef, 'value', unsubscribe);
+  const unsubLciis = onValue(lciisPatientsRef, (snapshot) => {
+    if (snapshot.exists()) processVitalsData(snapshot.val());
+    callback({ ...map });
+  });
+
+  return () => {
+    off(vitalsRef, 'value', unsubVitals);
+    off(lciisPatientsRef, 'value', unsubLciis);
+  };
 };
 
 // ==========================================
@@ -291,20 +313,26 @@ export const subscribeToAlerts = (
     if (onError) onError(new Error('Firebase RTDB not connected'));
     return () => {};
   }
+
   const alertsRef = ref(rtdb, 'alerts');
-  const unsubscribe = onValue(
+  const lciisAlertsRef = ref(rtdb, 'LCIIS/alerts');
+
+  let stdAlerts: Alert[] = [];
+  let lciisAlerts: Alert[] = [];
+
+  const unsubStd = onValue(
     alertsRef,
-    (snapshot: DataSnapshot) => {
+    (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        const alertList: Alert[] = Object.keys(data).map((key) => ({
+        stdAlerts = Object.keys(data).map((key) => ({
           ...data[key],
           id: data[key].id || key
         }));
-        callback(alertList);
       } else {
-        callback([]);
+        stdAlerts = [];
       }
+      callback([...stdAlerts, ...lciisAlerts]);
     },
     (error) => {
       console.error('Firebase alerts subscription error:', error);
@@ -312,7 +340,45 @@ export const subscribeToAlerts = (
     }
   );
 
-  return () => off(alertsRef, 'value', unsubscribe);
+  const unsubLciis = onValue(lciisAlertsRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      lciisAlerts = [];
+      Object.keys(data).forEach((key) => {
+        const item = data[key];
+        if (!item) return;
+        const pId = item.patient_id || item.patientId || 'P001';
+        const isSos = Boolean(item.sos);
+        const alertType = item.alert || (isSos ? 'SOS' : 'NORMAL');
+        if (isSos || alertType !== 'NORMAL') {
+          lciisAlerts.push({
+            id: `alert-lciis-${key}-${item.timestamp || Date.now()}`,
+            patientId: pId,
+            patientName: `Patient ${pId}`,
+            ward: 'ICU Ward',
+            bed: 'Bed 01',
+            type: isSos ? 'RAPID DETERIORATION' : 'PHYSIOLOGICAL TREND',
+            priority: isSos || String(alertType).includes('CRITICAL') ? 'CRITICAL' : 'HIGH',
+            status: 'NEW',
+            summary: isSos
+              ? '🚨 EMERGENCY SOS BUTTON PRESSED AT BEDSIDE!'
+              : `Critical ESP32 Sensor Alert: ${alertType} (HR: ${item.heart_rate || item.heartRate || '--'} BPM, Temp: ${item.temperature || '--'}°C)`,
+            concerns: [isSos ? 'Bedside SOS switch activated' : `Sensor Alert: ${alertType}`],
+            advisoryRisk: isSos ? 95 : 85,
+            createdAt: new Date(item.timestamp || Date.now()).toISOString()
+          });
+        }
+      });
+    } else {
+      lciisAlerts = [];
+    }
+    callback([...stdAlerts, ...lciisAlerts]);
+  });
+
+  return () => {
+    off(alertsRef, 'value', unsubStd);
+    off(lciisAlertsRef, 'value', unsubLciis);
+  };
 };
 
 export const acknowledgeAlert = async (
