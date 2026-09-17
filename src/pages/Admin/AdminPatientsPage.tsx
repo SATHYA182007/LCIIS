@@ -334,7 +334,7 @@ export const AdminPatientsPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 font-medium">
                   {filteredPatients.map((p) => {
-                    const vitals = liveVitalsMap[p.id] || liveVitalsMap['P12345'];
+                    const vitals = liveVitalsMap[p.id] || (p.id === 'P12345' ? liveVitalsMap['P12345'] : undefined);
                     const isChecked = selectedIds.includes(p.id);
 
                     return (
@@ -372,12 +372,12 @@ export const AdminPatientsPage: React.FC = () => {
                         </td>
                         <td className="p-3.5 font-bold text-slate-900">{p.advisoryRisk || 15}%</td>
                         <td className="p-3.5 text-[11px]">
-                          {vitals ? (
+                          {vitals && vitals.heartRate?.value !== undefined ? (
                             <span className="font-semibold text-slate-800">
-                              HR {vitals.heartRate?.value || 80} • SpO2 {vitals.spo2?.value || 98}%
+                              HR {vitals.heartRate.value} • SpO2 {vitals.spo2?.value || 98}%
                             </span>
                           ) : (
-                            <span className="text-gray-400">Offline</span>
+                            <span className="text-slate-400 font-semibold text-[10px]">Awaiting Telemetry</span>
                           )}
                         </td>
                         <td className="p-3.5 text-gray-700">{p.attendingDoctorName}</td>

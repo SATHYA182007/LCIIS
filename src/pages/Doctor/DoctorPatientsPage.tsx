@@ -143,7 +143,7 @@ export const DoctorPatientsPage: React.FC = () => {
                       </tr>
                     ) : (
                       filteredPatients.map((p) => {
-                        const v = liveVitalsMap[p.id] || liveVitalsMap['P12345'];
+                        const v = liveVitalsMap[p.id] || (p.id === 'P12345' ? liveVitalsMap['P12345'] : undefined);
                         return (
                           <tr key={p.id} className="hover:bg-teal-50/30 transition-colors">
                             <td className="p-3.5">
@@ -165,13 +165,13 @@ export const DoctorPatientsPage: React.FC = () => {
                             </td>
                             <td className="p-3.5 font-bold text-slate-900">{p.advisoryRisk}%</td>
                             <td className="p-3.5 text-[11px]">
-                              {v ? (
+                              {v && v.heartRate?.value !== undefined ? (
                                 <div className="space-x-2">
-                                  <span className="font-semibold text-slate-800">HR: {v.heartRate?.value || 80}</span>
-                                  <span className="font-semibold text-slate-800">SpO2: {v.spo2?.value || 98}%</span>
+                                  <span className="font-semibold text-slate-800">HR: {v.heartRate.value}</span>
+                                  <span className="font-semibold text-teal-700">SpO2: {v.spo2?.value || 98}%</span>
                                 </div>
                               ) : (
-                                <span className="text-gray-400">Telemetry Offline</span>
+                                <span className="text-slate-400 font-semibold text-[10px]">Awaiting Telemetry</span>
                               )}
                             </td>
                             <td className="p-3.5 text-gray-700">{p.attendingDoctorName}</td>

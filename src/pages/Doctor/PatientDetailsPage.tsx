@@ -51,7 +51,7 @@ export const PatientDetailsPage: React.FC = () => {
   } = useRealtime();
 
   const patient = getPatientById(patientId);
-  const vitals = liveVitalsMap[patientId] || liveVitalsMap['P12345'];
+  const vitals = liveVitalsMap[patientId] || (patientId === 'P12345' ? liveVitalsMap['P12345'] : undefined);
   const riskAssessment = getPatientRiskAssessment(patientId);
   const trends = getPatientTrends(patientId);
 

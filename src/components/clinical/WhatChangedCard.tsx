@@ -185,58 +185,109 @@ export const WhatChangedCard: React.FC<WhatChangedCardProps> = ({
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/50 flex items-center space-x-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                <div>
-                  <div className="font-bold text-emerald-900 text-xs">Baseline Parameters Stable & Telemetry Active</div>
-                  <div className="text-[11px] text-emerald-700 mt-0.5">
-                    No acute vital sign deteriorations or abnormal laboratory parameter shifts detected.
+              {vitals?.heartRate?.value !== undefined ? (
+                <>
+                  <div className="p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/50 flex items-center space-x-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <div>
+                      <div className="font-bold text-emerald-900 text-xs">Baseline Parameters Stable & Telemetry Active</div>
+                      <div className="text-[11px] text-emerald-700 mt-0.5">
+                        No acute vital sign deteriorations or abnormal laboratory parameter shifts detected.
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Display Baseline Vital Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-gray-500 font-medium text-[11px] flex items-center">
-                    <Activity className="w-3 h-3 text-teal-600 mr-1" /> Heart Rate
-                  </div>
-                  <div className="font-bold text-slate-900 text-sm mt-0.5">
-                    {vitals?.heartRate?.value || 80} <span className="text-xs font-normal text-gray-500">BPM</span>
-                  </div>
-                  <div className="text-[10px] font-bold text-emerald-600 mt-1">Normal Pulse (60-100)</div>
-                </div>
+                  {/* Display Baseline Vital Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                    <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="text-gray-500 font-medium text-[11px] flex items-center">
+                        <Activity className="w-3 h-3 text-teal-600 mr-1" /> Heart Rate
+                      </div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">
+                        {vitals.heartRate.value} <span className="text-xs font-normal text-gray-500">BPM</span>
+                      </div>
+                      <div className="text-[10px] font-bold text-emerald-600 mt-1">Normal Pulse (60-100)</div>
+                    </div>
 
-                <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-gray-500 font-medium text-[11px] flex items-center">
-                    <Activity className="w-3 h-3 text-teal-600 mr-1" /> Oxygen (SpO2)
-                  </div>
-                  <div className="font-bold text-slate-900 text-sm mt-0.5">
-                    {vitals?.spo2?.value || 98}% <span className="text-xs font-normal text-gray-500">Live</span>
-                  </div>
-                  <div className="text-[10px] font-bold text-emerald-600 mt-1">Optimal Saturation (≥95%)</div>
-                </div>
+                    <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="text-gray-500 font-medium text-[11px] flex items-center">
+                        <Activity className="w-3 h-3 text-teal-600 mr-1" /> Oxygen (SpO2)
+                      </div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">
+                        {vitals.spo2?.value || 98}% <span className="text-xs font-normal text-gray-500">Live</span>
+                      </div>
+                      <div className="text-[10px] font-bold text-emerald-600 mt-1">Optimal Saturation (≥95%)</div>
+                    </div>
 
-                <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-gray-500 font-medium text-[11px] flex items-center">
-                    <Activity className="w-3 h-3 text-teal-600 mr-1" /> Blood Pressure
-                  </div>
-                  <div className="font-bold text-slate-900 text-sm mt-0.5">
-                    {vitals?.bloodPressure?.systolic?.value || 120}/{vitals?.bloodPressure?.diastolic?.value || 80} <span className="text-xs font-normal text-gray-500">mmHg</span>
-                  </div>
-                  <div className="text-[10px] font-bold text-emerald-600 mt-1">Normotensive Range</div>
-                </div>
+                    <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="text-gray-500 font-medium text-[11px] flex items-center">
+                        <Activity className="w-3 h-3 text-teal-600 mr-1" /> Blood Pressure
+                      </div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">
+                        {vitals.bloodPressure?.systolic?.value || 120}/{vitals.bloodPressure?.diastolic?.value || 80} <span className="text-xs font-normal text-gray-500">mmHg</span>
+                      </div>
+                      <div className="text-[10px] font-bold text-emerald-600 mt-1">Normotensive Range</div>
+                    </div>
 
-                <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-gray-500 font-medium text-[11px] flex items-center">
-                    <Activity className="w-3 h-3 text-teal-600 mr-1" /> Resp. Rate
+                    <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="text-gray-500 font-medium text-[11px] flex items-center">
+                        <Activity className="w-3 h-3 text-teal-600 mr-1" /> Resp. Rate
+                      </div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">
+                        {vitals.respiratoryRate?.value || 16} <span className="text-xs font-normal text-gray-500">/min</span>
+                      </div>
+                      <div className="text-[10px] font-bold text-emerald-600 mt-1">Eupneic Baseline</div>
+                    </div>
                   </div>
-                  <div className="font-bold text-slate-900 text-sm mt-0.5">
-                    {vitals?.respiratoryRate?.value || 16} <span className="text-xs font-normal text-gray-500">/min</span>
+                </>
+              ) : (
+                <>
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50 flex items-center space-x-3">
+                    <Activity className="w-5 h-5 text-slate-400 shrink-0" />
+                    <div>
+                      <div className="font-bold text-slate-800 text-xs">Patient Registered — Awaiting Bedside Telemetry Stream</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        Patient admitted into {patient.ward} ({patient.bed}). Connect bedside ESP32 hardware monitor to stream live vitals to Firebase.
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-[10px] font-bold text-emerald-600 mt-1">Eupneic Baseline</div>
-                </div>
-              </div>
+
+                  {/* Display Empty/Unlinked Vital Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                    <div className="p-2.5 bg-slate-50/70 rounded-lg border border-dashed border-slate-200">
+                      <div className="text-slate-400 font-medium text-[11px] flex items-center">
+                        <Activity className="w-3 h-3 text-slate-400 mr-1" /> Heart Rate
+                      </div>
+                      <div className="font-bold text-slate-400 text-sm mt-0.5">-- <span className="text-xs font-normal text-slate-400">BPM</span></div>
+                      <div className="text-[10px] font-bold text-slate-400 mt-1">NO HARDWARE LINKED</div>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50/70 rounded-lg border border-dashed border-slate-200">
+                      <div className="text-slate-400 font-medium text-[11px] flex items-center">
+                        <Activity className="w-3 h-3 text-slate-400 mr-1" /> Oxygen (SpO2)
+                      </div>
+                      <div className="font-bold text-slate-400 text-sm mt-0.5">-- <span className="text-xs font-normal text-slate-400">%</span></div>
+                      <div className="text-[10px] font-bold text-slate-400 mt-1">NO HARDWARE LINKED</div>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50/70 rounded-lg border border-dashed border-slate-200">
+                      <div className="text-slate-400 font-medium text-[11px] flex items-center">
+                        <Activity className="w-3 h-3 text-slate-400 mr-1" /> Blood Pressure
+                      </div>
+                      <div className="font-bold text-slate-400 text-sm mt-0.5">--/-- <span className="text-xs font-normal text-slate-400">mmHg</span></div>
+                      <div className="text-[10px] font-bold text-slate-400 mt-1">NO HARDWARE LINKED</div>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50/70 rounded-lg border border-dashed border-slate-200">
+                      <div className="text-slate-400 font-medium text-[11px] flex items-center">
+                        <Activity className="w-3 h-3 text-slate-400 mr-1" /> Resp. Rate
+                      </div>
+                      <div className="font-bold text-slate-400 text-sm mt-0.5">-- <span className="text-xs font-normal text-slate-400">/min</span></div>
+                      <div className="text-[10px] font-bold text-slate-400 mt-1">NO HARDWARE LINKED</div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
