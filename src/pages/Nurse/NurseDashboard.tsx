@@ -39,9 +39,13 @@ export const NurseDashboard: React.FC = () => {
   const assignedPatients = patients.filter((p) => p.currentStatus !== 'Discharged');
   const criticalCount = assignedPatients.filter((p) => p.currentStatus === 'CRITICAL' || p.currentStatus === 'HIGH RISK').length;
 
+  const hasAnyConnectedHardware = useMemo(() => {
+    return assignedPatients.some((p) => Boolean(p.deviceId && liveVitalsMap[p.id]?.heartRate?.value !== undefined));
+  }, [assignedPatients, liveVitalsMap]);
+
   // Real-time telemetry trends for Nurse Dashboard
   const telemetryTrendData = useMemo(() => {
-    const connectedVitals = Object.values(liveVitalsMap).filter((v: any) => v?.heartRate?.value);
+    const connectedVitals = Object.values(liveVitalsMap).filter((v: any) => v?.heartRate?.value !== undefined);
 
     let avgHR = 78;
     let avgSpo2 = 97;
@@ -60,9 +64,9 @@ export const NurseDashboard: React.FC = () => {
     const times = ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
     return times.map((t, idx) => ({
       time: t,
-      'Ward Heart Rate': Math.min(130, Math.max(60, avgHR + Math.sin(idx * 0.8) * 4)),
-      'Ward SpO2 %': Math.min(100, Math.max(88, avgSpo2 + Math.cos(idx * 0.6) * 1.5)),
-      'Resp Rate': Math.min(30, Math.max(12, avgRR + Math.cos(idx * 0.9) * 1.2))
+      'Ward Heart Rate': Math.round(Math.min(130, Math.max(60, avgHR + Math.sin(idx * 0.8) * 4))),
+      'Ward SpO2 %': Math.round(Math.min(100, Math.max(88, avgSpo2 + Math.cos(idx * 0.6) * 1.5))),
+      'Resp Rate': Math.round(Math.min(30, Math.max(12, avgRR + Math.cos(idx * 0.9) * 1.2)))
     }));
   }, [liveVitalsMap]);
 
@@ -170,37 +174,48 @@ export const NurseDashboard: React.FC = () => {
                 </span>
               </div>
 
-              <div className="h-56 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={telemetryTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="nurseHR" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="nurseSpo2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                    <XAxis dataKey="time" stroke="#64748b" fontSize={10} tickLine={false} />
-                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} domain={['auto', 'auto']} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#0f172a',
-                        borderRadius: '0.5rem',
-                        color: '#fff',
-                        fontSize: '11px',
-                        fontWeight: 'bold'
-                      }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                    <Area type="monotone" dataKey="Ward Heart Rate" stroke="#0d9488" strokeWidth={2} fill="url(#nurseHR)" unit=" BPM" />
-                    <Area type="monotone" dataKey="Ward SpO2 %" stroke="#10b981" strokeWidth={2} fill="url(#nurseSpo2)" unit="%" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              {!hasAnyConnectedHardware ? (
+                <div className="h-56 my-2 flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center space-y-2">
+                  <Droplets className="w-8 h-8 text-amber-500 animate-pulse" />
+                  <div className="font-extrabold text-xs text-slate-900">NO TELEMETRY HARDWARE STREAMING IN WARD</div>
+                  <p className="text-[11px] text-slate-500 max-w-xs">
+                    None of the assigned ward patients currently have an active ESP32 telemetry hardware stream. Trajectories will display automatically once hardware connects.
+                  </p>
+                </div>
+              ) : (
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={telemetryTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="nurseHR" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="nurseSpo2" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                      <XAxis dataKey="time" stroke="#64748b" fontSize={10} tickLine={false} />
+                      <YAxis stroke="#64748b" fontSize={10} tickLine={false} domain={['auto', 'auto']} />
+                      <Tooltip
+                        formatter={(val: any) => typeof val === 'number' ? Math.round(val) : val}
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          borderRadius: '0.5rem',
+                          color: '#fff',
+                          fontSize: '11px',
+                          fontWeight: 'bold'
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                      <Area type="monotone" dataKey="Ward Heart Rate" stroke="#0d9488" strokeWidth={2} fill="url(#nurseHR)" unit=" BPM" />
+                      <Area type="monotone" dataKey="Ward SpO2 %" stroke="#10b981" strokeWidth={2} fill="url(#nurseSpo2)" unit="%" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
 
             {/* Shift Fluid Intake vs Output Bar Chart */}

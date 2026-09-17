@@ -71,6 +71,10 @@ export const DoctorDashboard: React.FC = () => {
     return Boolean(selectedPatientObj.deviceId && v && v.heartRate?.value !== undefined);
   }, [selectedPatientObj, liveVitalsMap]);
 
+  const hasAnyConnectedHardware = useMemo(() => {
+    return patients.some((p) => Boolean(p.deviceId && liveVitalsMap[p.id]?.heartRate?.value !== undefined));
+  }, [patients, liveVitalsMap]);
+
   // Real-time Trend Graph Data dynamically calculated based on live telemetry map & active patients
   const trendData = useMemo(() => {
     let avgHR = 76;
@@ -81,13 +85,13 @@ export const DoctorDashboard: React.FC = () => {
     if (selectedPatientIdFilter !== 'ALL' && selectedPatientObj) {
       const patientVitals = liveVitalsMap[selectedPatientObj.id];
       if (patientVitals && patientVitals.heartRate?.value) {
-        avgHR = patientVitals.heartRate.value;
-        avgSpo2 = patientVitals.spo2?.value || 98;
-        avgBP = patientVitals.bloodPressure?.systolic?.value || 124;
-        avgRR = patientVitals.respiratoryRate?.value || 18;
+        avgHR = Math.round(patientVitals.heartRate.value);
+        avgSpo2 = Math.round(patientVitals.spo2?.value || 98);
+        avgBP = Math.round(patientVitals.bloodPressure?.systolic?.value || 124);
+        avgRR = Math.round(patientVitals.respiratoryRate?.value || 18);
       }
     } else {
-      const connectedVitals = Object.values(liveVitalsMap).filter((v: any) => v?.heartRate?.value);
+      const connectedVitals = Object.values(liveVitalsMap).filter((v: any) => v?.heartRate?.value !== undefined);
       if (connectedVitals.length > 0) {
         const totalHR = connectedVitals.reduce((acc: number, v: any) => acc + (v.heartRate?.value || 76), 0);
         const totalSpo2 = connectedVitals.reduce((acc: number, v: any) => acc + (v.spo2?.value || 98), 0);
@@ -110,10 +114,10 @@ export const DoctorDashboard: React.FC = () => {
       const hours = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00'];
       return hours.map((h, idx) => ({
         time: h,
-        [hrKey]: Math.min(140, Math.max(50, avgHR + Math.sin(idx * 0.8) * 4)),
-        [spo2Key]: Math.min(100, Math.max(85, avgSpo2 + Math.cos(idx * 0.5) * 1.2)),
-        [bpKey]: Math.min(180, Math.max(80, avgBP + Math.sin(idx * 0.6) * 4)),
-        [rrKey]: Math.min(32, Math.max(10, avgRR + Math.cos(idx * 0.9) * 1.5))
+        [hrKey]: Math.round(Math.min(140, Math.max(50, avgHR + Math.sin(idx * 0.8) * 4))),
+        [spo2Key]: Math.round(Math.min(100, Math.max(85, avgSpo2 + Math.cos(idx * 0.5) * 1.2))),
+        [bpKey]: Math.round(Math.min(180, Math.max(80, avgBP + Math.sin(idx * 0.6) * 4))),
+        [rrKey]: Math.round(Math.min(32, Math.max(10, avgRR + Math.cos(idx * 0.9) * 1.5)))
       }));
     }
 
@@ -121,10 +125,10 @@ export const DoctorDashboard: React.FC = () => {
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       return days.map((d, idx) => ({
         time: d,
-        [hrKey]: Math.min(140, Math.max(50, avgHR + (idx % 2 === 0 ? 3 : -2))),
-        [spo2Key]: Math.min(100, Math.max(85, avgSpo2 + (idx % 3 === 0 ? 0.6 : -0.4))),
-        [bpKey]: Math.min(180, Math.max(80, avgBP + (idx % 2 === 0 ? -2 : 3))),
-        [rrKey]: Math.min(32, Math.max(10, avgRR + (idx % 2 === 0 ? 1 : -1)))
+        [hrKey]: Math.round(Math.min(140, Math.max(50, avgHR + (idx % 2 === 0 ? 3 : -2)))),
+        [spo2Key]: Math.round(Math.min(100, Math.max(85, avgSpo2 + (idx % 3 === 0 ? 0.6 : -0.4)))),
+        [bpKey]: Math.round(Math.min(180, Math.max(80, avgBP + (idx % 2 === 0 ? -2 : 3)))),
+        [rrKey]: Math.round(Math.min(32, Math.max(10, avgRR + (idx % 2 === 0 ? 1 : -1))))
       }));
     }
 
@@ -132,10 +136,10 @@ export const DoctorDashboard: React.FC = () => {
     const times = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     return times.map((t, idx) => ({
       time: t,
-      [hrKey]: Math.min(140, Math.max(50, avgHR + Math.sin(idx * 0.9) * 5)),
-      [spo2Key]: Math.min(100, Math.max(85, avgSpo2 + Math.cos(idx * 0.7) * 1.5)),
-      [bpKey]: Math.min(180, Math.max(80, avgBP + Math.sin(idx * 0.5) * 4)),
-      [rrKey]: Math.min(32, Math.max(10, avgRR + Math.cos(idx * 0.4) * 1.8))
+      [hrKey]: Math.round(Math.min(140, Math.max(50, avgHR + Math.sin(idx * 0.9) * 5))),
+      [spo2Key]: Math.round(Math.min(100, Math.max(85, avgSpo2 + Math.cos(idx * 0.7) * 1.5))),
+      [bpKey]: Math.round(Math.min(180, Math.max(80, avgBP + Math.sin(idx * 0.5) * 4))),
+      [rrKey]: Math.round(Math.min(32, Math.max(10, avgRR + Math.cos(idx * 0.4) * 1.8)))
     }));
   }, [liveVitalsMap, trendTimeframe, selectedPatientIdFilter, selectedPatientObj]);
 
@@ -369,7 +373,16 @@ export const DoctorDashboard: React.FC = () => {
             </div>
 
             {/* Recharts Area Chart or Unlinked Hardware Notice */}
-            {selectedPatientIdFilter !== 'ALL' && !isSelectedPatientHardwareConnected ? (
+            {selectedPatientIdFilter === 'ALL' && !hasAnyConnectedHardware ? (
+              <div className="h-64 my-4 flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center space-y-2">
+                <Radio className="w-8 h-8 text-amber-500 animate-pulse" />
+                <div className="font-extrabold text-sm text-slate-900">NO TELEMETRY HARDWARE STREAMING IN WARD</div>
+                <p className="text-xs text-slate-500 max-w-md">
+                  None of the currently registered ward patients ({patients.length} total) have an active ESP32 hardware telemetry device connected to their bed.
+                  Once hardware devices are linked to patients and stream live vitals to Firebase RTDB, aggregated ward trajectories will appear here automatically.
+                </p>
+              </div>
+            ) : selectedPatientIdFilter !== 'ALL' && !isSelectedPatientHardwareConnected ? (
               <div className="h-64 my-4 flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center space-y-2">
                 <Radio className="w-8 h-8 text-amber-500 animate-pulse" />
                 <div className="font-extrabold text-sm text-slate-900">NO HARDWARE TELEMETRY LINKED</div>
@@ -400,6 +413,7 @@ export const DoctorDashboard: React.FC = () => {
                     <XAxis dataKey="time" stroke="#64748b" fontSize={11} tickLine={false} />
                     <YAxis stroke="#64748b" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                     <Tooltip
+                      formatter={(val: any) => typeof val === 'number' ? Math.round(val) : val}
                       contentStyle={{
                         backgroundColor: '#0f172a',
                         borderColor: '#334155',
