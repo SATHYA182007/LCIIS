@@ -37,15 +37,15 @@ export class ExplanationEngine {
     });
 
     // Analyze Vitals
-    if (vitals.spo2?.value && vitals.spo2.value < 95) {
+    if (vitals?.spo2?.value && vitals.spo2.value < 95) {
       concerns.push(`Oxygen level has decreased (${vitals.spo2.value}%).`);
     }
 
-    if (vitals.heartRate?.value && vitals.heartRate.value > 100) {
+    if (vitals?.heartRate?.value && vitals.heartRate.value > 100) {
       concerns.push(`Heart rate has increased (${vitals.heartRate.value} BPM).`);
     }
 
-    if (vitals.respiratoryRate?.value && vitals.respiratoryRate.value > 20) {
+    if (vitals?.respiratoryRate?.value && vitals.respiratoryRate.value > 20) {
       concerns.push(`Breathing rate is elevated (${vitals.respiratoryRate.value}/min).`);
     }
 

@@ -31,7 +31,7 @@ export class DemoRiskModel implements RiskPredictionModel {
     });
 
     // Evaluate SpO2 vital breach
-    if (input.vitals.spo2?.value) {
+    if (input.vitals?.spo2?.value) {
       const spo2 = input.vitals.spo2.value;
       if (spo2 < 88) score += 35;
       else if (spo2 < 93) score += 20;
@@ -39,14 +39,14 @@ export class DemoRiskModel implements RiskPredictionModel {
     }
 
     // Evaluate Heart Rate vital breach
-    if (input.vitals.heartRate?.value) {
+    if (input.vitals?.heartRate?.value) {
       const hr = input.vitals.heartRate.value;
       if (hr > 120 || hr < 45) score += 25;
       else if (hr > 100) score += 15;
     }
 
     // Evaluate Respiratory Rate breach
-    if (input.vitals.respiratoryRate?.value) {
+    if (input.vitals?.respiratoryRate?.value) {
       const rr = input.vitals.respiratoryRate.value;
       if (rr > 26 || rr < 10) score += 20;
       else if (rr > 20) score += 10;
@@ -84,9 +84,9 @@ export class RiskAggregator {
   public static calculateRisk(input: PatientRiskInput): RiskAssessment {
     // 1. Clinical Rule Score (0-100)
     let ruleScore = 10;
-    if (input.vitals.spo2?.value && input.vitals.spo2.value < 90) ruleScore += 40;
-    if (input.vitals.heartRate?.value && input.vitals.heartRate.value > 110) ruleScore += 25;
-    if (input.vitals.respiratoryRate?.value && input.vitals.respiratoryRate.value > 22) ruleScore += 25;
+    if (input.vitals?.spo2?.value && input.vitals.spo2.value < 90) ruleScore += 40;
+    if (input.vitals?.heartRate?.value && input.vitals.heartRate.value > 110) ruleScore += 25;
+    if (input.vitals?.respiratoryRate?.value && input.vitals.respiratoryRate.value > 22) ruleScore += 25;
     ruleScore = Math.min(100, ruleScore);
 
     // 2. Trend Score (0-100)
