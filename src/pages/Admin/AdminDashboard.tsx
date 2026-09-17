@@ -2,7 +2,7 @@ import React from 'react';
 import { useRealtime } from '../../context/RealtimeContext';
 import { Header } from '../../components/layout/Header';
 import { Sidebar } from '../../components/layout/Sidebar';
-import { Package, Cpu, History, AlertTriangle, Activity } from 'lucide-react';
+import { Package, Cpu, Users, AlertTriangle, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminDashboard: React.FC = () => {
@@ -80,10 +80,10 @@ export const AdminDashboard: React.FC = () => {
               <h3 className="text-sm font-bold text-slate-900">ESP32 Device Registry</h3>
               <p className="text-xs text-gray-500 mt-1">Bedside monitor assignment and heartbeat monitoring.</p>
             </div>
-            <div onClick={() => navigate('/admin/audit-logs')} className="card-clinical p-5 cursor-pointer hover:border-purple-500">
-              <History className="w-6 h-6 text-purple-600 mb-2" />
-              <h3 className="text-sm font-bold text-slate-900">System Audit Logs</h3>
-              <p className="text-xs text-gray-500 mt-1">Immutable ledger of all security, clinical, and inventory events.</p>
+            <div onClick={() => navigate('/admin/users')} className="card-clinical p-5 cursor-pointer hover:border-purple-500">
+              <Users className="w-6 h-6 text-purple-600 mb-2" />
+              <h3 className="text-sm font-bold text-slate-900">User Management</h3>
+              <p className="text-xs text-gray-500 mt-1">Manage staff access approval, freeze access, and role permissions.</p>
             </div>
           </div>
 
@@ -113,8 +113,8 @@ export const AdminDashboard: React.FC = () => {
                 <div className="font-bold text-slate-900 mt-0.5">Telemetry Listener Ready</div>
               </div>
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-gray-500 font-medium">Audit Logger</div>
-                <div className="font-bold text-slate-900 mt-0.5">Immutable Ledger Active</div>
+                <div className="text-gray-500 font-medium">User Management</div>
+                <div className="font-bold text-slate-900 mt-0.5">RBAC Controls Active</div>
               </div>
             </div>
           </div>

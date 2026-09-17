@@ -10,10 +10,8 @@ import {
   FlaskConical,
   Cpu,
   Package,
-  History,
   Settings,
   LogOut,
-  Radio,
   ChevronRight,
   ShieldCheck,
   Stethoscope,
@@ -69,8 +67,6 @@ export const Sidebar: React.FC = () => {
     { label: 'Inventory', path: '/admin/inventory', icon: Package },
     { label: 'Devices', path: '/admin/devices', icon: Cpu },
     { label: 'Expiry Center', path: '/admin/expiry', icon: AlertTriangle },
-    { label: 'Audit Logs', path: '/admin/audit-logs', icon: History },
-    { label: 'Test Data', path: '/simulation', icon: Radio },
     { label: 'Settings', path: '/admin/settings', icon: Settings },
   ];
 
