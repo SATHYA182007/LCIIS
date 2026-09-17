@@ -44,6 +44,7 @@ import {
   deleteUserFromDB,
   updateLiveVitals as firebaseUpdateLiveVitals,
   acknowledgeAlert as firebaseAcknowledgeAlert,
+  clearAllAlertsFromDB as firebaseClearAllAlertsFromDB,
   updateDeviceStatus as firebaseUpdateDeviceStatus,
   seedInitialDatabaseIfEmpty,
   purgeUnlinkedVitalsFromRTDB
@@ -101,6 +102,7 @@ interface RealtimeContextType {
   addLaboratoryResult: (result: Omit<LaboratoryResult, 'id' | 'createdAt'>) => void;
   updateLiveVitals: (patientId: string, vitals: any) => Promise<void>;
   acknowledgeAlert: (alertId: string, doctorName: string) => Promise<void>;
+  clearAllAlerts: () => Promise<void>;
   overrideAlert: (alertId: string, doctorName: string, reason: string) => void;
   addNurseObservation: (observation: Omit<NurseObservation, 'id' | 'timestamp'>) => void;
   addDoctorRemark: (remark: Omit<DoctorRemark, 'id' | 'timestamp'>) => void;
@@ -588,6 +590,13 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [isFirebaseConnected]);
 
+  const clearAllAlerts = useCallback(async () => {
+    if (isFirebaseConnected) {
+      await firebaseClearAllAlertsFromDB();
+    }
+    setAlerts([]);
+  }, [isFirebaseConnected]);
+
   const overrideAlert = useCallback((alertId: string, doctorName: string, reason: string) => {
     setAlerts((prev) =>
       prev.map((a) =>
@@ -725,6 +734,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addLaboratoryResult,
         updateLiveVitals,
         acknowledgeAlert,
+        clearAllAlerts,
         overrideAlert,
         addNurseObservation,
         addDoctorRemark,

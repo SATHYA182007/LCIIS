@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useRealtime } from '../../context/RealtimeContext';
 import { Header } from '../../components/layout/Header';
 import { Sidebar } from '../../components/layout/Sidebar';
-import { ShieldAlert, Eye } from 'lucide-react';
+import { ShieldAlert, Eye, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const NurseAlertsPage: React.FC = () => {
-  const { alerts, acknowledgeAlert, getPatientById } = useRealtime();
+  const { alerts, acknowledgeAlert, clearAllAlerts, getPatientById } = useRealtime();
   const navigate = useNavigate();
 
   const handleAck = (id: string) => {
@@ -23,14 +23,29 @@ export const NurseAlertsPage: React.FC = () => {
         <Header title="Nurse Deterioration Alerts" />
 
         <main className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto w-full">
-          <div className="card-clinical p-4 bg-white">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center">
-              <ShieldAlert className="w-5 h-5 mr-2 text-orange-600" />
-              Ward Patient Deterioration Alert Feed
-            </h2>
-            <p className="text-xs text-gray-500 mt-1">
-              Active alerts requiring nursing observation and clinical response
-            </p>
+          <div className="card-clinical p-4 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 flex items-center">
+                <ShieldAlert className="w-5 h-5 mr-2 text-orange-600" />
+                Ward Patient Deterioration Alert Feed
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Active alerts requiring nursing observation and clinical response ({alerts.length} notifications)
+              </p>
+            </div>
+
+            {alerts.length > 0 && (
+              <button
+                onClick={() => {
+                  clearAllAlerts();
+                  toast.success(`Cleared all ${alerts.length} notifications!`);
+                }}
+                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs rounded-lg border border-red-200 transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 shrink-0"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear All Notifications</span>
+              </button>
+            )}
           </div>
 
           <div className="space-y-3">

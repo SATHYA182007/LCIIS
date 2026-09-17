@@ -394,6 +394,14 @@ export const acknowledgeAlert = async (
   }));
 };
 
+export const clearAllAlertsFromDB = async (): Promise<void> => {
+  if (!rtdb) return;
+  const alertsRef = ref(rtdb, 'alerts');
+  await remove(alertsRef);
+  const lciisAlertsRef = ref(rtdb, 'LCIIS/alerts');
+  await remove(lciisAlertsRef);
+};
+
 // ==========================================
 // DEVICE OPERATIONS
 // ==========================================

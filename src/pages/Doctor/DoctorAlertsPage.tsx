@@ -4,11 +4,11 @@ import { useRealtime } from '../../context/RealtimeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Header } from '../../components/layout/Header';
 import { Sidebar } from '../../components/layout/Sidebar';
-import { ShieldAlert, CheckCircle2, Eye, Check, Clock } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Eye, Check, Clock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const DoctorAlertsPage: React.FC = () => {
-  const { alerts, acknowledgeAlert, getPatientById } = useRealtime();
+  const { alerts, acknowledgeAlert, clearAllAlerts, getPatientById } = useRealtime();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -54,8 +54,22 @@ export const DoctorAlertsPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="text-xs font-bold text-gray-500">
-                {filteredAlerts.length} Active Notifications
+              <div className="flex items-center space-x-3">
+                <span className="text-xs font-bold text-gray-500">
+                  {filteredAlerts.length} Active Notifications
+                </span>
+                {alerts.length > 0 && (
+                  <button
+                    onClick={() => {
+                      clearAllAlerts();
+                      toast.success(`Cleared all ${alerts.length} notifications!`);
+                    }}
+                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs rounded-lg border border-red-200 transition-all flex items-center space-x-1.5 shadow-xs active:scale-95"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Clear All Notifications</span>
+                  </button>
+                )}
               </div>
             </div>
 
