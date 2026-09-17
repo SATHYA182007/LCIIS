@@ -108,10 +108,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode, forcedRole }) =
     }
   }, [location.pathname, initialMode, forcedRole]);
 
+  const [pendingApprovalSuccess, setPendingApprovalSuccess] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setResetSuccess(false);
+    setPendingApprovalSuccess(false);
 
     try {
       if (mode === 'forgot-password') {
@@ -127,17 +130,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode, forcedRole }) =
           return;
         }
         await signup(email, password, name, role, employeeId);
-        toast.success(`${role.toUpperCase()} account registered successfully in Firebase.`);
+        setPendingApprovalSuccess(true);
+        toast.info('Registration submitted! Awaiting Admin approval.');
+        return;
       } else {
         await login(email, password, role);
         toast.success(`Welcome back, ${role.toUpperCase()} user!`);
+        if (role === 'receptionist') navigate('/receptionist/dashboard');
+        else if (role === 'nurse') navigate('/nurse/dashboard');
+        else if (role === 'laboratory') navigate('/laboratory/dashboard');
+        else if (role === 'admin') navigate('/admin/dashboard');
+        else navigate('/doctor/dashboard');
       }
-
-      if (role === 'receptionist') navigate('/receptionist/dashboard');
-      else if (role === 'nurse') navigate('/nurse/dashboard');
-      else if (role === 'laboratory') navigate('/laboratory/dashboard');
-      else if (role === 'admin') navigate('/admin/dashboard');
-      else navigate('/doctor/dashboard');
     } catch (err: any) {
       setErrorMsg(err.message || 'Authentication failed. Please check your credentials.');
     }
@@ -292,8 +296,38 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode, forcedRole }) =
           )}
         </AnimatePresence>
 
-        {/* Main Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Pending Approval Confirmation View */}
+        {pendingApprovalSuccess ? (
+          <div className="space-y-4 text-center py-2">
+            <div className="w-14 h-14 rounded-2xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
+              <ShieldCheck className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">Registration Submitted!</h3>
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed bg-amber-50/80 p-3 rounded-xl border border-amber-200/80 font-medium text-left">
+                Your <strong className="text-slate-900 capitalize">{role}</strong> registration for <span className="font-mono text-teal-800 font-bold">{email}</span> is currently <strong className="text-amber-800">Pending Admin Approval</strong>.
+              </p>
+            </div>
+            <div className="text-[11px] text-slate-500 font-semibold bg-slate-50 p-2.5 rounded-lg border border-slate-200/70">
+              An Administrator must approve your account before access is granted to your workstation.
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setPendingApprovalSuccess(false);
+                setMode('signin');
+                setErrorMsg('');
+                navigate('/signin');
+              }}
+              className="w-full bg-teal-700 hover:bg-teal-800 text-white font-extrabold text-xs py-3 rounded-xl shadow-md transition-all flex items-center justify-center space-x-1.5"
+            >
+              <span>Return to Clinical Sign In</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          /* Main Form */
+          <form onSubmit={handleSubmit} className="space-y-4">
           {/* Full Name for Signup */}
           {mode === 'signup' && (
             <div>
@@ -484,7 +518,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode, forcedRole }) =
               Return to Sign In
             </button>
           )}
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );

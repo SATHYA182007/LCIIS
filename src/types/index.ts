@@ -1,4 +1,4 @@
-export type UserRole = 'receptionist' | 'nurse' | 'doctor' | 'laboratory' | 'admin';
+export type UserAccountStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'FROZEN' | 'RESTRICTED' | 'REVOKED';
 
 export interface UserProfile {
   id: string;
@@ -7,7 +7,12 @@ export interface UserProfile {
   role: UserRole;
   employeeId?: string;
   department?: string;
-  status?: 'ACTIVE' | 'INACTIVE';
+  status?: UserAccountStatus;
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  statusReason?: string;
+  registeredAt?: string;
+  approvedBy?: string;
+  approvedAt?: string;
   createdAt: string;
 }
 

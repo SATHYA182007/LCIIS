@@ -63,26 +63,30 @@ export const RegisterPatientPage: React.FC = () => {
     }
   };
 
-  const wardOptions = [
-    'General Ward A',
-    'General Ward B',
-    'ICU Unit A',
-    'ICU Unit B',
-    'Emergency Ward 1',
-    'Emergency Ward 2',
-    'Cardiology Ward',
-    'Surgical Ward',
-    'Neurology Unit',
-    'Pediatric Care',
-    'High Dependency Unit (HDU)',
-    'Outpatient Intake'
-  ];
+  const WARD_BED_MAP: Record<string, string[]> = {
+    'General Ward A': Array.from({ length: 20 }, (_, i) => `Bed ${String(i + 1).padStart(2, '0')}`),
+    'General Ward B': Array.from({ length: 20 }, (_, i) => `Bed ${String(i + 1).padStart(2, '0')}`),
+    'ICU Unit A': Array.from({ length: 6 }, (_, i) => `ICU Bed ${String(i + 1).padStart(2, '0')}`),
+    'ICU Unit B': Array.from({ length: 6 }, (_, i) => `ICU Bed ${String(i + 1).padStart(2, '0')}`),
+    'Emergency Ward 1': Array.from({ length: 10 }, (_, i) => `ER Bed ${String(i + 1).padStart(2, '0')}`),
+    'Emergency Ward 2': Array.from({ length: 10 }, (_, i) => `ER Bed ${String(i + 1).padStart(2, '0')}`),
+    'Cardiology Ward': Array.from({ length: 12 }, (_, i) => `Bed ${String(i + 1).padStart(2, '0')}`),
+    'Surgical Ward': Array.from({ length: 12 }, (_, i) => `Bed ${String(i + 1).padStart(2, '0')}`),
+    'Neurology Unit': Array.from({ length: 10 }, (_, i) => `Bed ${String(i + 1).padStart(2, '0')}`),
+    'Pediatric Care': Array.from({ length: 8 }, (_, i) => `Peds Bed ${String(i + 1).padStart(2, '0')}`),
+    'High Dependency Unit (HDU)': Array.from({ length: 8 }, (_, i) => `HDU Bed ${String(i + 1).padStart(2, '0')}`),
+    'Outpatient Intake': Array.from({ length: 4 }, (_, i) => `Bay ${String(i + 1).padStart(2, '0')}`),
+  };
 
-  const bedOptions = [
-    'Bed 01', 'Bed 02', 'Bed 03', 'Bed 04', 'Bed 05',
-    'Bed 06', 'Bed 07', 'Bed 08', 'Bed 09', 'Bed 10',
-    'Bed 11', 'Bed 12', 'Bed 14', 'Bed 15', 'Bed 20'
-  ];
+  const wardOptions = Object.keys(WARD_BED_MAP);
+
+  const currentBedOptions = WARD_BED_MAP[ward] || WARD_BED_MAP['General Ward A'];
+
+  useEffect(() => {
+    if (!currentBedOptions.includes(bed)) {
+      setBed(currentBedOptions[0]);
+    }
+  }, [ward]);
 
   const doctorOptions = [
     { id: 'user-doc-1', name: 'Dr. Sarah Jenkins', specialty: 'ICU & Internal Medicine' },
@@ -528,7 +532,7 @@ export const RegisterPatientPage: React.FC = () => {
                 <h3 className="text-xs font-extrabold text-teal-900 uppercase tracking-wider flex items-center justify-between">
                   <span>3. Admission, Ward & Doctor Assignment</span>
                   <span className="text-[11px] text-teal-700 font-semibold normal-case bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-100">
-                    Selectable Toggles & Doctor Assignment
+                    Ward & Doctor Assignment
                   </span>
                 </h3>
 
@@ -541,64 +545,33 @@ export const RegisterPatientPage: React.FC = () => {
                     <select
                       value={ward}
                       onChange={(e) => setWard(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-semibold focus:ring-2 focus:ring-teal-500 focus:outline-hidden mb-2"
+                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-semibold focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                     >
                       {wardOptions.map((w) => (
                         <option key={w} value={w}>{w}</option>
                       ))}
                     </select>
-
-                    {/* Ward Quick Toggle Pills */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {['General Ward A', 'ICU Unit A', 'Emergency Ward 1', 'Cardiology Ward'].map((w) => (
-                        <button
-                          type="button"
-                          key={w}
-                          onClick={() => setWard(w)}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
-                            ward === w
-                              ? 'bg-teal-700 text-white border-teal-700 shadow-xs'
-                              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                          }`}
-                        >
-                          {w}
-                        </button>
-                      ))}
-                    </div>
                   </div>
 
                   {/* Assigned Bed */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Assigned Bed <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-slate-700">
+                        Assigned Bed <span className="text-red-500">*</span>
+                      </label>
+                      <span className="text-[10px] font-extrabold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
+                        {currentBedOptions.length} Beds Capacity
+                      </span>
+                    </div>
                     <select
                       value={bed}
                       onChange={(e) => setBed(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-semibold focus:ring-2 focus:ring-teal-500 focus:outline-hidden mb-2"
+                      className="w-full px-3.5 py-2.5 text-xs bg-white border border-gray-200 rounded-xl font-semibold focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                     >
-                      {bedOptions.map((b) => (
+                      {currentBedOptions.map((b) => (
                         <option key={b} value={b}>{b}</option>
                       ))}
                     </select>
-
-                    {/* Bed Quick Toggle Pills */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {['Bed 01', 'Bed 02', 'Bed 03', 'Bed 04', 'Bed 05', 'Bed 06'].map((b) => (
-                        <button
-                          type="button"
-                          key={b}
-                          onClick={() => setBed(b)}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
-                            bed === b
-                              ? 'bg-teal-700 text-white border-teal-700 shadow-xs'
-                              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                          }`}
-                        >
-                          {b}
-                        </button>
-                      ))}
-                    </div>
                   </div>
 
                   {/* Assigned Doctor */}
@@ -617,24 +590,6 @@ export const RegisterPatientPage: React.FC = () => {
                         </option>
                       ))}
                     </select>
-
-                    {/* Doctor Quick Selection Pills */}
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {doctorOptions.slice(0, 4).map((doc) => (
-                        <button
-                          type="button"
-                          key={doc.id}
-                          onClick={() => setAttendingDoctorName(doc.name)}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
-                            attendingDoctorName === doc.name
-                              ? 'bg-teal-700 text-white border-teal-700 shadow-xs'
-                              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                          }`}
-                        >
-                          {doc.name}
-                        </button>
-                      ))}
-                    </div>
 
                     {/* Custom Doctor Name Input if 'OTHER' selected */}
                     {attendingDoctorName === '+ Enter Custom Doctor Name...' && (

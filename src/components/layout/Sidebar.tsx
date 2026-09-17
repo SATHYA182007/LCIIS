@@ -44,8 +44,6 @@ export const Sidebar: React.FC = () => {
     { label: 'Live Vitals', path: '/doctor/vitals', icon: HeartPulse },
     { label: 'Alerts', path: '/doctor/alerts', icon: AlertTriangle },
     { label: 'Reports', path: '/reports', icon: FileText },
-    { label: 'Test Data', path: '/simulation', icon: Radio },
-    { label: 'Architecture', path: '/system-architecture', icon: Cpu },
   ];
 
   const nurseNav = [
@@ -55,8 +53,6 @@ export const Sidebar: React.FC = () => {
     { label: 'Alerts', path: '/nurse/alerts', icon: AlertTriangle },
     { label: 'Observations', path: '/nurse/observations', icon: Stethoscope },
     { label: 'Reports', path: '/reports', icon: FileText },
-    { label: 'Test Data', path: '/simulation', icon: Radio },
-    { label: 'Device Monitor', path: '/device-monitor', icon: Cpu },
   ];
 
   const labNav = [
@@ -64,8 +60,6 @@ export const Sidebar: React.FC = () => {
     { label: 'Patients', path: '/laboratory/patients', icon: Users },
     { label: 'Lab Results', path: '/laboratory/results', icon: FlaskConical },
     { label: 'Reports', path: '/laboratory/reports', icon: FileText },
-    { label: 'Test Data', path: '/simulation', icon: Radio },
-    { label: 'Architecture', path: '/system-architecture', icon: Cpu },
   ];
 
   const adminNav = [

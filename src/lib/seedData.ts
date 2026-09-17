@@ -20,6 +20,8 @@ export const DEMO_USERS: UserProfile[] = [
     name: 'Dr. Sarah Jenkins',
     role: 'doctor',
     department: 'Intensive Care Unit (ICU)',
+    status: 'ACTIVE',
+    approvalStatus: 'APPROVED',
     createdAt: new Date().toISOString(),
   },
   {
@@ -28,6 +30,8 @@ export const DEMO_USERS: UserProfile[] = [
     name: 'Nurse Michael Chen, RN',
     role: 'nurse',
     department: 'Intensive Care Unit (ICU)',
+    status: 'ACTIVE',
+    approvalStatus: 'APPROVED',
     createdAt: new Date().toISOString(),
   },
   {
@@ -36,6 +40,8 @@ export const DEMO_USERS: UserProfile[] = [
     name: 'Robert Vance, MLS',
     role: 'laboratory',
     department: 'Clinical Biochemistry & Hematology',
+    status: 'ACTIVE',
+    approvalStatus: 'APPROVED',
     createdAt: new Date().toISOString(),
   },
   {
@@ -45,6 +51,8 @@ export const DEMO_USERS: UserProfile[] = [
     role: 'receptionist',
     employeeId: 'REC001',
     department: 'Patient Intake & Registration',
+    status: 'ACTIVE',
+    approvalStatus: 'APPROVED',
     createdAt: new Date().toISOString(),
   },
   {
@@ -53,6 +61,8 @@ export const DEMO_USERS: UserProfile[] = [
     name: 'System Admin (GreenMinds)',
     role: 'admin',
     department: 'IT & Systems Operations',
+    status: 'ACTIVE',
+    approvalStatus: 'APPROVED',
     createdAt: new Date().toISOString(),
   },
 ];

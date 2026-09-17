@@ -100,16 +100,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
+  const checkAccountStatus = (userProfile: UserProfile) => {
+    const status = userProfile.status || (userProfile.approvalStatus === 'PENDING' ? 'PENDING' : 'ACTIVE');
+    if (userProfile.approvalStatus === 'PENDING' || status === 'PENDING') {
+      throw new Error('Access Pending: Your registration is awaiting Administrator approval. You will be able to log in once an Admin approves your account.');
+    }
+    if (status === 'FROZEN') {
+      throw new Error('Account Frozen: Your access has been temporarily suspended by the Administrator.');
+    }
+    if (status === 'RESTRICTED') {
+      throw new Error('Account Restricted: Your account access has been restricted by system administration.');
+    }
+    if (status === 'REVOKED') {
+      throw new Error('Access Revoked: Your account credentials have been removed by the Administrator.');
+    }
+    if (status === 'INACTIVE') {
+      throw new Error('Account Deactivated: Your profile is currently inactive.');
+    }
+  };
+
   const login = async (email: string, password?: string, selectedRole?: UserRole): Promise<boolean> => {
     setIsLoading(true);
+
+    // Check existing stored user records in localStorage
+    const savedAll = localStorage.getItem('lciis_all_users');
+    let allUsersList: UserProfile[] = DEMO_USERS;
+    if (savedAll) {
+      try {
+        const parsed = JSON.parse(savedAll);
+        if (Array.isArray(parsed)) allUsersList = parsed;
+      } catch (e) { /* ignore */ }
+    }
+
+    const localMatch = allUsersList.find((u) => u.email.toLowerCase() === email.toLowerCase());
     const demoMatch = DEMO_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const matchedProfile = localMatch || demoMatch;
+
+    if (matchedProfile) {
+      checkAccountStatus(matchedProfile);
+    }
 
     if (isFirebaseConfigured() && auth && password) {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const fbUser = userCredential.user;
 
-        let userProfile: UserProfile | null = null;
+        let userProfile: UserProfile | null = matchedProfile || null;
         if (rtdb) {
           try {
             const userRef = ref(rtdb, `users/${fbUser.uid}`);
@@ -126,10 +162,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           userProfile = {
             id: fbUser.uid,
             email: fbUser.email || email,
-            name: fbUser.displayName || (demoMatch ? demoMatch.name : email.split('@')[0].toUpperCase()),
-            role: selectedRole || (demoMatch ? demoMatch.role : 'doctor'),
-            employeeId: demoMatch?.employeeId,
-            department: demoMatch ? demoMatch.department : 'Clinical Operations',
+            name: fbUser.displayName || (matchedProfile ? matchedProfile.name : email.split('@')[0].toUpperCase()),
+            role: selectedRole || (matchedProfile ? matchedProfile.role : 'doctor'),
+            employeeId: matchedProfile?.employeeId,
+            department: matchedProfile ? matchedProfile.department : 'Clinical Operations',
+            status: 'ACTIVE',
+            approvalStatus: 'APPROVED',
             createdAt: new Date().toISOString()
           };
           if (rtdb) {
@@ -137,23 +175,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
+        checkAccountStatus(userProfile);
+
         setUser(userProfile);
         setIsLoading(false);
         return true;
       } catch (error: any) {
+        if (error.message && error.message.startsWith('Account') || error.message?.startsWith('Access')) {
+          setIsLoading(false);
+          throw error;
+        }
+
         // If login failed because demo user is not registered in Firebase Auth yet, try creating account automatically!
-        if (demoMatch && (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found')) {
+        if (matchedProfile && (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found')) {
           try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const fbUser = userCredential.user;
             const userProfile: UserProfile = {
+              ...matchedProfile,
               id: fbUser.uid,
               email: fbUser.email || email,
-              name: demoMatch.name,
-              role: selectedRole || demoMatch.role,
-              employeeId: demoMatch.employeeId,
-              department: demoMatch.department,
-              createdAt: new Date().toISOString()
             };
             if (rtdb) {
               await set(ref(rtdb, `users/${fbUser.uid}`), cleanUndefined(userProfile)).catch(() => {});
@@ -162,15 +203,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsLoading(false);
             return true;
           } catch (createErr) {
-            setUser(demoMatch);
+            setUser(matchedProfile);
             setIsLoading(false);
             return true;
           }
         }
 
-        // If demo user email or Auth provider is not enabled in Firebase Console, fallback to demo user
-        if (demoMatch) {
-          setUser(demoMatch);
+        // Fallback for demo users
+        if (matchedProfile) {
+          setUser(matchedProfile);
           setIsLoading(false);
           return true;
         }
@@ -185,9 +226,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Fallback for demo users
-    if (demoMatch) {
-      setUser(demoMatch);
+    // Fallback for local users
+    if (matchedProfile) {
+      setUser(matchedProfile);
       setIsLoading(false);
       return true;
     }
@@ -198,6 +239,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       name: email.split('@')[0].toUpperCase(),
       role: selectedRole || 'doctor',
       department: 'Clinical Operations',
+      status: 'ACTIVE',
+      approvalStatus: 'APPROVED',
       createdAt: new Date().toISOString()
     };
     setUser(newUser);
@@ -222,43 +265,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      let uid = `user-${Date.now()}`;
       if (isFirebaseConfigured() && auth && password) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const fbUser = userCredential.user;
-
-        const newProfile: UserProfile = {
-          id: fbUser.uid,
-          email,
-          name: userName,
-          role: userRole,
-          employeeId: employeeId || (userRole === 'receptionist' ? 'REC001' : undefined),
-          department: userRole === 'receptionist' ? 'Admissions & Desk' : 'Clinical Operations',
-          createdAt: new Date().toISOString()
-        };
-
-        if (rtdb) {
-          await set(ref(rtdb, `users/${fbUser.uid}`), newProfile).catch((err) =>
-            console.warn('Could not save user profile to RTDB:', err)
-          );
-        }
-
-        setUser(newProfile);
-        setIsLoading(false);
-        return true;
+        uid = userCredential.user.uid;
       }
 
-      // Demo signup fallback
-      const newUser: UserProfile = {
-        id: `user-${Date.now()}`,
+      const newProfile: UserProfile = {
+        id: uid,
         email,
         name: userName,
         role: userRole,
         employeeId: employeeId || (userRole === 'receptionist' ? 'REC001' : undefined),
         department: userRole === 'receptionist' ? 'Admissions & Desk' : 'Hospital Staff',
+        status: 'PENDING',
+        approvalStatus: 'PENDING',
+        registeredAt: new Date().toISOString(),
         createdAt: new Date().toISOString()
       };
 
-      setUser(newUser);
+      if (rtdb) {
+        await set(ref(rtdb, `users/${uid}`), newProfile).catch((err) =>
+          console.warn('Could not save user profile to RTDB:', err)
+        );
+      }
+
+      // Add to localStorage list so admin sees pending user in RealtimeContext
+      const savedAll = localStorage.getItem('lciis_all_users');
+      let currentUsers: UserProfile[] = DEMO_USERS;
+      if (savedAll) {
+        try {
+          const parsed = JSON.parse(savedAll);
+          if (Array.isArray(parsed)) currentUsers = parsed;
+        } catch (e) { /* ignore */ }
+      }
+
+      const updatedUsers = [...currentUsers.filter((u) => u.email.toLowerCase() !== email.toLowerCase()), newProfile];
+      localStorage.setItem('lciis_all_users', JSON.stringify(updatedUsers));
+
+      // Clear current logged in session so pending user is NOT logged in
+      setUser(null);
+      localStorage.removeItem('lciis_auth_user');
+
       setIsLoading(false);
       return true;
     } catch (error: any) {

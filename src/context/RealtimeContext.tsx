@@ -33,6 +33,8 @@ import {
   subscribeToPatients,
   subscribeToLiveVitals,
   subscribeToAlerts,
+  subscribeToUsers,
+  saveUserToDB,
   createPatient as firebaseCreatePatient,
   updateLiveVitals as firebaseUpdateLiveVitals,
   acknowledgeAlert as firebaseAcknowledgeAlert,
@@ -77,7 +79,9 @@ interface RealtimeContextType {
 
   // Clinical & Operations Mutations
   addUser: (user: Omit<UserProfile, 'id' | 'createdAt'>) => void;
-  updateUserStatus: (userId: string, status: 'ACTIVE' | 'INACTIVE') => void;
+  updateUserStatus: (userId: string, status: UserAccountStatus, reason?: string) => void;
+  approveUser: (userId: string, adminName?: string) => void;
+  rejectUser: (userId: string) => void;
   addPatient: (patient: Partial<Patient>) => Promise<Patient>;
   addLaboratoryResult: (result: Omit<LaboratoryResult, 'id' | 'createdAt'>) => void;
   updateLiveVitals: (patientId: string, vitals: any) => Promise<void>;
@@ -119,6 +123,35 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     AuditService.initialize(auditLogs);
   }, []);
 
+  // Sync Users from localStorage and cross-tab/window events
+  useEffect(() => {
+    const handleSync = () => {
+      const saved = localStorage.getItem('lciis_all_users');
+      if (saved) {
+        try {
+          const parsed: UserProfile[] = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setUsers((prev) => {
+              const map = new Map<string, UserProfile>();
+              DEMO_USERS.forEach((u) => map.set(u.email.toLowerCase(), u));
+              prev.forEach((u) => map.set(u.email.toLowerCase(), u));
+              parsed.forEach((u) => map.set(u.email.toLowerCase(), { ...map.get(u.email.toLowerCase()), ...u }));
+              return Array.from(map.values());
+            });
+          }
+        } catch (e) { /* ignore */ }
+      }
+    };
+
+    handleSync();
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('lciis-users-updated', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('lciis-users-updated', handleSync);
+    };
+  }, []);
+
   // Connect Firebase Realtime Database Listeners
   useEffect(() => {
     if (!isFirebaseConfigured() || !rtdb) {
@@ -130,6 +163,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let unsubPatients: (() => void) | undefined;
     let unsubVitals: (() => void) | undefined;
     let unsubAlerts: (() => void) | undefined;
+    let unsubUsers: (() => void) | undefined;
 
     const setupFirebaseSync = async () => {
       try {
@@ -146,7 +180,6 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setIsFirebaseConnected(true);
             setIsLoadingFirebase(false);
             if (remotePatients.length > 0) {
-              // Ensure selectedPatientId is valid
               const exists = remotePatients.some((p) => p.id === selectedPatientId || p.hospitalId === selectedPatientId);
               if (!exists) {
                 setSelectedPatientId(remotePatients[0].id || remotePatients[0].hospitalId);
@@ -179,6 +212,24 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             console.error('Alerts subscription failed:', err);
           }
         );
+
+        // 4. Subscribe to Users
+        unsubUsers = subscribeToUsers(
+          (remoteUsers) => {
+            if (remoteUsers.length > 0) {
+              setUsers((prev) => {
+                const map = new Map<string, UserProfile>();
+                DEMO_USERS.forEach((u) => map.set(u.email.toLowerCase(), u));
+                prev.forEach((u) => map.set(u.email.toLowerCase(), u));
+                remoteUsers.forEach((u) => map.set(u.email.toLowerCase(), { ...map.get(u.email.toLowerCase()), ...u }));
+                const merged = Array.from(map.values());
+                localStorage.setItem('lciis_all_users', JSON.stringify(merged));
+                return merged;
+              });
+            }
+          },
+          (err) => console.warn('Users subscription notice:', err)
+        );
       } catch (err: any) {
         console.error('Failed to setup Firebase RTDB sync:', err);
         setFirebaseError(err.message || 'Firebase initialization failed.');
@@ -192,8 +243,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (unsubPatients) unsubPatients();
       if (unsubVitals) unsubVitals();
       if (unsubAlerts) unsubAlerts();
+      if (unsubUsers) unsubUsers();
     };
-  }, []);
+  }, [selectedPatientId]);
 
   const getPatientById = useCallback((id: string) => {
     if (!id) return undefined;
@@ -276,14 +328,66 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addUser = useCallback((newUser: Omit<UserProfile, 'id' | 'createdAt'>) => {
     const fullUser: UserProfile = {
       ...newUser,
-      id: `user-${Date.now()}`,
+      id: newUser.email ? `user-${newUser.email.replace(/[^a-zA-Z0-9]/g, '-')}` : `user-${Date.now()}`,
+      status: newUser.status || 'ACTIVE',
+      approvalStatus: newUser.approvalStatus || 'APPROVED',
       createdAt: new Date().toISOString(),
     };
-    setUsers((prev) => [...prev, fullUser]);
+    saveUserToDB(fullUser).catch(() => {});
+    setUsers((prev) => {
+      const filtered = prev.filter((u) => u.email.toLowerCase() !== newUser.email.toLowerCase());
+      const updated = [...filtered, fullUser];
+      localStorage.setItem('lciis_all_users', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('lciis-users-updated'));
+      return updated;
+    });
   }, []);
 
-  const updateUserStatus = useCallback((userId: string, status: 'ACTIVE' | 'INACTIVE') => {
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status } : u)));
+  const updateUserStatus = useCallback((userId: string, status: UserAccountStatus, reason?: string) => {
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          const mod = { ...u, status, statusReason: reason || u.statusReason };
+          saveUserToDB(mod).catch(() => {});
+          return mod;
+        }
+        return u;
+      });
+      localStorage.setItem('lciis_all_users', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('lciis-users-updated'));
+      return updated;
+    });
+  }, []);
+
+  const approveUser = useCallback((userId: string, adminName?: string) => {
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          const mod: UserProfile = {
+            ...u,
+            status: 'ACTIVE',
+            approvalStatus: 'APPROVED',
+            approvedBy: adminName || 'System Admin',
+            approvedAt: new Date().toISOString(),
+          };
+          saveUserToDB(mod).catch(() => {});
+          return mod;
+        }
+        return u;
+      });
+      localStorage.setItem('lciis_all_users', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('lciis-users-updated'));
+      return updated;
+    });
+  }, []);
+
+  const rejectUser = useCallback((userId: string) => {
+    setUsers((prev) => {
+      const updated = prev.filter((u) => u.id !== userId);
+      localStorage.setItem('lciis_all_users', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('lciis-users-updated'));
+      return updated;
+    });
   }, []);
 
   const addPatient = useCallback(async (newP: Partial<Patient>): Promise<Patient> => {
@@ -492,6 +596,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         getPatientExplanation,
         addUser,
         updateUserStatus,
+        approveUser,
+        rejectUser,
         addPatient,
         addLaboratoryResult,
         updateLiveVitals,

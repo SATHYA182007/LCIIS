@@ -572,3 +572,46 @@ export const seedSamplePatientsToFirebase = async (): Promise<number> => {
 
   return samplePatients.length;
 };
+
+// ==========================================
+// USER OPERATIONS
+// ==========================================
+
+export const subscribeToUsers = (
+  callback: (users: any[]) => void,
+  errorCallback?: (error: Error) => void
+): (() => void) => {
+  if (!rtdb) return () => {};
+  const usersRef = ref(rtdb, 'users');
+
+  const handleValue = (snapshot: DataSnapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const list: any[] = [];
+      Object.keys(data).forEach((key) => {
+        if (data[key] && typeof data[key] === 'object') {
+          list.push({ ...data[key], id: data[key].id || key });
+        }
+      });
+      callback(list);
+    } else {
+      callback([]);
+    }
+  };
+
+  const handleError = (error: Error) => {
+    if (errorCallback) errorCallback(error);
+  };
+
+  onValue(usersRef, handleValue, handleError);
+
+  return () => {
+    off(usersRef, 'value', handleValue);
+  };
+};
+
+export const saveUserToDB = async (userProfile: any): Promise<void> => {
+  const db = getRTDB();
+  const userRef = ref(db, `users/${userProfile.id}`);
+  await set(userRef, cleanUndefined(userProfile));
+};
