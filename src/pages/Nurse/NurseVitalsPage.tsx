@@ -29,8 +29,8 @@ export const NurseVitalsPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {patients.map((p) => {
-              const v = liveVitalsMap[p.id] || (p.id === 'P12345' ? liveVitalsMap['P12345'] : undefined);
-              const hasVitals = v && (v.heartRate?.value !== undefined || v.spo2?.value !== undefined);
+              const v = p.deviceId ? liveVitalsMap[p.id] : undefined;
+              const hasVitals = Boolean(p.deviceId && v && (v.heartRate?.value !== undefined || v.spo2?.value !== undefined));
               return (
                 <div key={p.id} className="card-clinical p-4 bg-white space-y-3 border-l-4 border-l-teal-600">
                   <div className="flex justify-between items-start">
@@ -47,11 +47,11 @@ export const NurseVitalsPage: React.FC = () => {
                     <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
                       <div>
                         <span className="text-[10px] text-gray-400 font-bold block">Heart Rate</span>
-                        <span className="font-black text-slate-900 text-sm">{v.heartRate?.value !== undefined ? `${v.heartRate.value} BPM` : '--'}</span>
+                        <span className="font-black text-slate-900 text-sm">{v?.heartRate?.value !== undefined ? `${v.heartRate.value} BPM` : '--'}</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-gray-400 font-bold block">SpO2 Level</span>
-                        <span className="font-black text-slate-900 text-sm">{v.spo2?.value !== undefined ? `${v.spo2.value}%` : '--'}</span>
+                        <span className="font-black text-slate-900 text-sm">{v?.spo2?.value !== undefined ? `${v.spo2.value}%` : '--'}</span>
                       </div>
                     </div>
                   ) : (

@@ -19,7 +19,7 @@ export const ReportsPage: React.FC = () => {
 
     try {
       const patientLabs = labResults.filter((l) => l.patientId === patient.id);
-      const patientVitals = liveVitalsMap[patient.id] || liveVitalsMap['P12345'];
+      const patientVitals = patient.deviceId ? liveVitalsMap[patient.id] : undefined;
       const patientRemarks = doctorRemarks.filter((r) => r.patientId === patient.id);
 
       exportPatientPDF(patient, patientLabs, patientVitals, patientRemarks);

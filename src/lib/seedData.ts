@@ -92,7 +92,7 @@ export const INITIAL_DEMO_PATIENT: Patient = {
   existingConditions: ['Type 2 Diabetes', 'Hypertension', 'CKD Stage II'],
   currentStatus: 'HIGH RISK',
   advisoryRisk: 74,
-  deviceId: 'ESP32-ICU-001',
+  deviceId: undefined,
   createdAt: '2026-09-08T08:00:00Z',
   updatedAt: new Date().toISOString(),
 };
@@ -412,7 +412,7 @@ export const generateSyntheticPatients = (): Patient[] => {
       existingConditions: ['Hypertension', 'Hyperlipidemia'],
       currentStatus: status,
       advisoryRisk: risk,
-      deviceId: i % 2 === 0 ? `ESP32-${dept.prefix}-${bedNum}` : undefined,
+      deviceId: undefined,
       createdAt: new Date(Date.now() - (i * 3600000 * 4)).toISOString(),
       updatedAt: new Date().toISOString(),
     });

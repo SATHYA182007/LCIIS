@@ -334,7 +334,7 @@ export const AdminPatientsPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 font-medium">
                   {filteredPatients.map((p) => {
-                    const vitals = liveVitalsMap[p.id] || (p.id === 'P12345' ? liveVitalsMap['P12345'] : undefined);
+                    const vitals = p.deviceId ? liveVitalsMap[p.id] : undefined;
                     const isChecked = selectedIds.includes(p.id);
 
                     return (

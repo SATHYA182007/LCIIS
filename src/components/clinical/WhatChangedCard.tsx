@@ -8,7 +8,7 @@ interface WhatChangedCardProps {
   patient: Patient;
   riskAssessment: RiskAssessment;
   trends: TrendResult[];
-  vitals: LiveVitals;
+  vitals?: LiveVitals;
 }
 
 interface ChangedParam {

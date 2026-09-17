@@ -11,7 +11,7 @@ export class ExplanationEngine {
     _patient: Patient,
     _riskAssessment: RiskAssessment,
     trends: TrendResult[],
-    vitals: LiveVitals,
+    vitals: LiveVitals | undefined,
     _labResults: LaboratoryResult[]
   ): ExplanationSummary {
     const concerns: string[] = [];

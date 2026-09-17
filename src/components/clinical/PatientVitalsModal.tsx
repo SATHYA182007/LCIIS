@@ -15,6 +15,7 @@ import {
   X,
   Activity,
   Wifi,
+  WifiOff,
   Battery,
   Plus,
   Radio,
@@ -43,8 +44,9 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
   const [formTemp, setFormTemp] = useState<number>(36.8);
 
   const patient = patientId ? getPatientById(patientId) : null;
-  const vitals = patientId ? (liveVitalsMap[patientId] || (patientId === 'P12345' ? liveVitalsMap['P12345'] : undefined)) : null;
-  const device = devices.find((d) => d.patientId === patientId) || devices[0];
+  const vitals = patientId ? liveVitalsMap[patientId] : null;
+  const hasHardware = Boolean(patient?.deviceId && vitals && vitals.heartRate?.value !== undefined);
+  const device = devices.find((d) => d.patientId === patientId);
 
   // Sync controlled state whenever vitals or patientId changes
   useEffect(() => {
@@ -56,22 +58,26 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
       if (vitals.respiratoryRate?.value !== undefined) setFormRR(vitals.respiratoryRate.value);
       if (vitals.temperature?.value !== undefined) setFormTemp(vitals.temperature.value);
     }
-  }, [patientId, liveVitalsMap]);
+  }, [patientId, liveVitalsMap, vitals]);
 
   if (!isOpen || !patientId || !patient) return null;
 
-  const hrVal = vitals?.heartRate?.value || formHR;
-  const spo2Val = vitals?.spo2?.value || formSpO2;
-  const isHrHigh = hrVal > 100;
-  const isSpo2Low = spo2Val < 94;
+  const hrVal = hasHardware ? vitals?.heartRate?.value : null;
+  const spo2Val = hasHardware ? vitals?.spo2?.value : null;
+  const sysVal = hasHardware ? vitals?.bloodPressure?.systolic?.value : null;
+  const diaVal = hasHardware ? vitals?.bloodPressure?.diastolic?.value : null;
+  const rrVal = hasHardware ? vitals?.respiratoryRate?.value : null;
+  const tempVal = hasHardware ? vitals?.temperature?.value : null;
 
-  const vitalsTimeData = [
-    { time: '10:00 AM', HeartRate: 82, SpO2: 98, Systolic: 120, Diastolic: 80, RespRate: 16, Temp: 37.0 },
-    { time: '11:00 AM', HeartRate: 88, SpO2: 97, Systolic: 124, Diastolic: 82, RespRate: 18, Temp: 37.2 },
-    { time: '12:00 PM', HeartRate: 94, SpO2: 96, Systolic: 128, Diastolic: 82, RespRate: 19, Temp: 37.5 },
-    { time: '01:00 PM', HeartRate: 102, SpO2: 94, Systolic: 134, Diastolic: 84, RespRate: 22, Temp: 37.9 },
-    { time: '02:00 PM', HeartRate: hrVal, SpO2: spo2Val, Systolic: formSystolic, Diastolic: formDiastolic, RespRate: formRR, Temp: formTemp },
-  ];
+  const isHrHigh = Boolean(hrVal && hrVal > 100);
+  const isSpo2Low = Boolean(spo2Val && spo2Val < 94);
+
+  const vitalsTimeData = hasHardware ? [
+    { time: '10:00 AM', HeartRate: (hrVal ? hrVal - 6 : 75), SpO2: (spo2Val ? Math.min(100, spo2Val + 1) : 98), Systolic: (sysVal ? sysVal - 6 : 120), Diastolic: (diaVal ? diaVal - 3 : 80), RespRate: (rrVal ? rrVal - 2 : 16) },
+    { time: '11:00 AM', HeartRate: (hrVal ? hrVal - 3 : 78), SpO2: (spo2Val ? Math.min(100, spo2Val + 1) : 98), Systolic: (sysVal ? sysVal - 3 : 122), Diastolic: (diaVal ? diaVal - 1 : 80), RespRate: (rrVal ? rrVal - 1 : 17) },
+    { time: '12:00 PM', HeartRate: (hrVal ? hrVal - 1 : 80), SpO2: (spo2Val || 98), Systolic: (sysVal || 120), Diastolic: (diaVal || 80), RespRate: (rrVal || 18) },
+    { time: 'Current', HeartRate: hrVal, SpO2: spo2Val, Systolic: sysVal, Diastolic: diaVal, RespRate: rrVal },
+  ] : [];
 
   const handleUpdateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,8 +119,17 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
                 <span className="text-xs text-slate-400">({patient.ward} • {patient.bed})</span>
               </div>
               <p className="text-xs text-cyan-300 font-medium flex items-center mt-0.5">
-                <Wifi className="w-3 h-3 mr-1 text-emerald-400 animate-pulse" />
-                Live Bedside Telemetry Stream • Node Node: {device?.esp32Id || 'ESP32-ICU-001'}
+                {hasHardware ? (
+                  <>
+                    <Wifi className="w-3 h-3 mr-1 text-emerald-400 animate-pulse" />
+                    Live Bedside Telemetry Stream • Node Node: {device?.esp32Id || patient.deviceId || 'ESP32 Device'}
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-3 h-3 mr-1 text-amber-400" />
+                    No Hardware Telemetry Linked • Bed Standby Mode
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -225,169 +240,193 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
           {/* High-Frequency Live Telemetry Display Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Heart Rate Card */}
-            <div className={`card-clinical p-4 bg-white space-y-2 border-l-4 ${isHrHigh ? 'border-l-red-500 bg-red-50/30' : 'border-l-emerald-500'}`}>
+            <div className={`card-clinical p-4 bg-white space-y-2 border-l-4 ${!hasHardware ? 'border-l-slate-300' : isHrHigh ? 'border-l-red-500 bg-red-50/30' : 'border-l-emerald-500'}`}>
               <div className="flex justify-between items-center text-xs font-bold text-gray-600">
                 <span className="flex items-center">
-                  <HeartPulse className="w-4 h-4 mr-1 text-red-500 animate-pulse" /> HEART RATE (BPM)
+                  <HeartPulse className={`w-4 h-4 mr-1 ${hasHardware ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} /> HEART RATE (BPM)
                 </span>
                 <span className="text-[10px] font-mono text-gray-400">Ref: 60-100</span>
               </div>
               <div className="flex items-baseline space-x-2">
-                <span className={`text-3xl font-black ${isHrHigh ? 'text-red-600' : 'text-slate-900'}`}>{hrVal}</span>
+                <span className={`text-3xl font-black ${hasHardware ? (isHrHigh ? 'text-red-600' : 'text-slate-900') : 'text-slate-400'}`}>
+                  {hasHardware ? hrVal : '--'}
+                </span>
                 <span className="text-xs text-gray-500 font-bold">BPM</span>
               </div>
-              {/* Simulated ECG Wave */}
               <div className="h-7 w-full bg-slate-950 rounded flex items-center px-2 text-emerald-400 font-mono text-[10px] overflow-hidden">
-                <span className="animate-pulse">/\_/\__/\_/\__/\_/\__/\</span>
+                {hasHardware ? (
+                  <span className="animate-pulse">/\_/\__/\_/\__/\_/\__/\</span>
+                ) : (
+                  <span className="text-slate-500">-- NO HARDWARE SIGNAL --</span>
+                )}
               </div>
             </div>
 
             {/* SpO2 Card */}
-            <div className={`card-clinical p-4 bg-white space-y-2 border-l-4 ${isSpo2Low ? 'border-l-amber-500 bg-amber-50/30' : 'border-l-emerald-500'}`}>
+            <div className={`card-clinical p-4 bg-white space-y-2 border-l-4 ${!hasHardware ? 'border-l-slate-300' : isSpo2Low ? 'border-l-amber-500 bg-amber-50/30' : 'border-l-emerald-500'}`}>
               <div className="flex justify-between items-center text-xs font-bold text-gray-600">
                 <span className="flex items-center">
-                  <Radio className="w-4 h-4 mr-1 text-cyan-600 animate-pulse" /> OXYGEN SATURATION (SpO2)
+                  <Radio className={`w-4 h-4 mr-1 ${hasHardware ? 'text-cyan-600 animate-pulse' : 'text-slate-400'}`} /> OXYGEN SATURATION (SpO2)
                 </span>
                 <span className="text-[10px] font-mono text-gray-400">Ref: 95-100%</span>
               </div>
               <div className="flex items-baseline space-x-2">
-                <span className={`text-3xl font-black ${isSpo2Low ? 'text-amber-600' : 'text-slate-900'}`}>{spo2Val}%</span>
-                <span className="text-xs text-gray-500 font-bold">Live</span>
+                <span className={`text-3xl font-black ${hasHardware ? (isSpo2Low ? 'text-amber-600' : 'text-slate-900') : 'text-slate-400'}`}>
+                  {hasHardware ? `${spo2Val}%` : '--'}
+                </span>
+                <span className="text-xs text-gray-500 font-bold">{hasHardware ? 'Live' : 'Standby'}</span>
               </div>
-              {/* Pulse Oximetry Wave */}
               <div className="h-7 w-full bg-slate-950 rounded flex items-center px-2 text-cyan-300 font-mono text-[10px] overflow-hidden">
-                <span className="animate-pulse">~~\__~~\__~~\__~~\__</span>
+                {hasHardware ? (
+                  <span className="animate-pulse">~~\__~~\__~~\__~~\__</span>
+                ) : (
+                  <span className="text-slate-500">-- NO HARDWARE SIGNAL --</span>
+                )}
               </div>
             </div>
 
             {/* BP & Resp Rate Card */}
-            <div className="card-clinical p-4 bg-white space-y-2.5 border-l-4 border-l-teal-600">
+            <div className={`card-clinical p-4 bg-white space-y-2.5 border-l-4 ${hasHardware ? 'border-l-teal-600' : 'border-l-slate-300'}`}>
               <div className="flex justify-between items-center text-xs font-bold text-gray-600">
                 <span>BLOOD PRESSURE & RESPIRATION</span>
-                <span className="text-[10px] font-mono text-gray-400">Continuous</span>
+                <span className="text-[10px] font-mono text-gray-400">{hasHardware ? 'Continuous' : 'Standby'}</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <div className="text-[10px] text-gray-400 font-bold">BP (mmHg)</div>
-                  <div className="text-lg font-black text-slate-900 mt-0.5">
-                    {vitals?.bloodPressure?.systolic.value || 138}/{vitals?.bloodPressure?.diastolic.value || 84}
+                  <div className={`text-lg font-black ${hasHardware ? 'text-slate-900' : 'text-slate-400'} mt-0.5`}>
+                    {hasHardware ? `${sysVal}/${diaVal}` : '--/--'}
                   </div>
                 </div>
                 <div>
                   <div className="text-[10px] text-gray-400 font-bold">Resp Rate (/min)</div>
-                  <div className="text-lg font-black text-slate-900 mt-0.5">
-                    {vitals?.respiratoryRate?.value || 24}
+                  <div className={`text-lg font-black ${hasHardware ? 'text-slate-900' : 'text-slate-400'} mt-0.5`}>
+                    {hasHardware ? rrVal : '--'}
                   </div>
                 </div>
               </div>
               <div className="text-[10px] text-gray-500 font-medium border-t border-gray-100 pt-1.5 flex justify-between">
-                <span>Temp: <strong>{vitals?.temperature?.value || 38.2}°C</strong></span>
-                <span>Urine: <strong>{vitals?.urineOutput?.value || 25} mL/hr</strong></span>
+                <span>Temp: <strong>{hasHardware ? `${tempVal}°C` : '--'}</strong></span>
+                <span>Urine: <strong>{hasHardware ? `${vitals?.urineOutput?.value || 25} mL/hr` : '--'}</strong></span>
               </div>
             </div>
           </div>
 
-          {/* Time-Series Recharts Graph */}
+          {/* Time-Series Recharts Graph or Unlinked Notice */}
           <div className="card-clinical p-4 bg-white space-y-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-100 pb-2">
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center">
-                <Activity className="w-4 h-4 mr-1.5 text-teal-700" /> Physiological Trametry Trend Graph
+                <Activity className="w-4 h-4 mr-1.5 text-teal-700" /> Physiological Telemetry Trend Graph
               </h3>
 
-              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-                <button
-                  onClick={() => setActiveChartTab('hr')}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
-                    activeChartTab === 'hr' ? 'bg-teal-700 text-white shadow-xs' : 'text-gray-600'
-                  }`}
-                >
-                  Heart Rate
-                </button>
-                <button
-                  onClick={() => setActiveChartTab('spo2')}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
-                    activeChartTab === 'spo2' ? 'bg-teal-700 text-white shadow-xs' : 'text-gray-600'
-                  }`}
-                >
-                  SpO2 %
-                </button>
-                <button
-                  onClick={() => setActiveChartTab('bp')}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
-                    activeChartTab === 'bp' ? 'bg-teal-700 text-white shadow-xs' : 'text-gray-600'
-                  }`}
-                >
-                  Blood Pressure
-                </button>
-                <button
-                  onClick={() => setActiveChartTab('rr')}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
-                    activeChartTab === 'rr' ? 'bg-teal-700 text-white shadow-xs' : 'text-gray-600'
-                  }`}
-                >
-                  Resp Rate
-                </button>
-              </div>
+              {hasHardware && (
+                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                  <button
+                    onClick={() => setActiveChartTab('hr')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                      activeChartTab === 'hr' ? 'bg-teal-700 text-white shadow-xs' : 'text-gray-600'
+                    }`}
+                  >
+                    Heart Rate
+                  </button>
+                  <button
+                    onClick={() => setActiveChartTab('spo2')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                      activeChartTab === 'spo2' ? 'bg-teal-700 text-white shadow-xs' : 'text-gray-600'
+                    }`}
+                  >
+                    SpO2 %
+                  </button>
+                  <button
+                    onClick={() => setActiveChartTab('bp')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                      activeChartTab === 'bp' ? 'bg-teal-700 text-white shadow-xs' : 'text-gray-600'
+                    }`}
+                  >
+                    Blood Pressure
+                  </button>
+                  <button
+                    onClick={() => setActiveChartTab('rr')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                      activeChartTab === 'rr' ? 'bg-teal-700 text-white shadow-xs' : 'text-gray-600'
+                    }`}
+                  >
+                    Resp Rate
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={vitalsTimeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="time" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} />
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }} />
-                  <Legend />
-                  {activeChartTab === 'hr' && (
-                    <Line type="monotone" dataKey="HeartRate" name="Heart Rate (BPM)" stroke="#ef4444" strokeWidth={3} dot={{ r: 5 }} />
-                  )}
-                  {activeChartTab === 'spo2' && (
-                    <Line type="monotone" dataKey="SpO2" name="SpO2 Saturation (%)" stroke="#06b6d4" strokeWidth={3} dot={{ r: 5 }} />
-                  )}
-                  {activeChartTab === 'bp' && (
-                    <>
-                      <Line type="monotone" dataKey="Systolic" name="Systolic BP (mmHg)" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5 }} />
-                      <Line type="monotone" dataKey="Diastolic" name="Diastolic BP (mmHg)" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" />
-                    </>
-                  )}
-                  {activeChartTab === 'rr' && (
-                    <Line type="monotone" dataKey="RespRate" name="Respiratory Rate (/min)" stroke="#10b981" strokeWidth={3} dot={{ r: 5 }} />
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            {!hasHardware ? (
+              <div className="h-56 my-2 flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center space-y-2">
+                <Radio className="w-8 h-8 text-amber-500 animate-pulse" />
+                <div className="font-extrabold text-sm text-slate-900">NO TELEMETRY HARDWARE LINKED TO THIS PATIENT</div>
+                <p className="text-xs text-slate-500 max-w-md">
+                  Patient <strong className="text-slate-900">{patient.name}</strong> is currently registered in <strong className="text-slate-900">{patient.ward} ({patient.bed})</strong> without a linked ESP32 hardware device.
+                  Once an ESP32 hardware telemetry device is assigned to this bed and streams to Firebase, live vitals and physiological trend graphs will display automatically.
+                </p>
+              </div>
+            ) : (
+              <div className="h-56 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={vitalsTimeData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="time" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} />
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }} />
+                    <Legend />
+                    {activeChartTab === 'hr' && (
+                      <Line type="monotone" dataKey="HeartRate" name="Heart Rate (BPM)" stroke="#ef4444" strokeWidth={3} dot={{ r: 5 }} />
+                    )}
+                    {activeChartTab === 'spo2' && (
+                      <Line type="monotone" dataKey="SpO2" name="SpO2 Saturation (%)" stroke="#06b6d4" strokeWidth={3} dot={{ r: 5 }} />
+                    )}
+                    {activeChartTab === 'bp' && (
+                      <>
+                        <Line type="monotone" dataKey="Systolic" name="Systolic BP (mmHg)" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5 }} />
+                        <Line type="monotone" dataKey="Diastolic" name="Diastolic BP (mmHg)" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" />
+                      </>
+                    )}
+                    {activeChartTab === 'rr' && (
+                      <Line type="monotone" dataKey="RespRate" name="Respiratory Rate (/min)" stroke="#10b981" strokeWidth={3} dot={{ r: 5 }} />
+                    )}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
 
           {/* Hardware Device Telemetry Node Status Box */}
           <div className="card-clinical p-4 bg-slate-900 text-white space-y-2">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
               <h3 className="text-xs font-bold flex items-center text-teal-400 uppercase tracking-wider">
-                <Cpu className="w-4 h-4 mr-1.5" /> Bedside Node Hardware ({device?.esp32Id || 'ESP32-ICU-001'})
+                <Cpu className="w-4 h-4 mr-1.5" /> Bedside Node Hardware ({hasHardware ? (device?.esp32Id || patient.deviceId) : 'Unlinked / Standby'})
               </h3>
-              <span className="text-[10px] font-mono text-emerald-400 flex items-center">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1" /> Telemetry Stream Active
+              <span className={`text-[10px] font-mono flex items-center ${hasHardware ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <span className={`w-2 h-2 rounded-full ${hasHardware ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'} mr-1`} />
+                {hasHardware ? 'Telemetry Stream Active' : 'No Hardware Connected'}
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
               <div className="p-2.5 bg-slate-800 rounded border border-slate-700">
                 <div className="text-slate-400 text-[10px]">MAC Address</div>
-                <div className="font-mono font-bold text-white mt-0.5">{device?.macAddress || '24:0A:C4:00:11:A2'}</div>
+                <div className="font-mono font-bold text-white mt-0.5">{hasHardware ? (device?.macAddress || 'Hardware Stream Connected') : '--:--:--:--:--:--'}</div>
               </div>
               <div className="p-2.5 bg-slate-800 rounded border border-slate-700">
                 <div className="text-slate-400 text-[10px]">Firmware</div>
-                <div className="font-mono font-bold text-white mt-0.5">{device?.firmwareVersion || 'v2.4.1-LCIIS'}</div>
+                <div className="font-mono font-bold text-white mt-0.5">{hasHardware ? (device?.firmwareVersion || 'v2.4.1') : 'Standby'}</div>
               </div>
               <div className="p-2.5 bg-slate-800 rounded border border-slate-700">
                 <div className="text-slate-400 text-[10px]">Battery</div>
                 <div className="font-bold text-teal-300 mt-0.5 flex items-center">
-                  <Battery className="w-3.5 h-3.5 mr-1" /> {device?.batteryLevel || 98}%
+                  <Battery className="w-3.5 h-3.5 mr-1" /> {hasHardware ? (device?.batteryLevel ? `${device.batteryLevel}%` : '100%') : '--'}
                 </div>
               </div>
               <div className="p-2.5 bg-slate-800 rounded border border-slate-700">
                 <div className="text-slate-400 text-[10px]">Calibration</div>
                 <div className="font-bold text-emerald-300 mt-0.5 text-[11px] truncate">
-                  ECG, SpO2 Good
+                  {hasHardware ? 'ECG, SpO2 Good' : 'No Sensor Signal'}
                 </div>
               </div>
             </div>
@@ -407,3 +446,4 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
     </div>
   );
 };
+

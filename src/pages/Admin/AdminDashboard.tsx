@@ -449,7 +449,7 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {patients.slice(0, 6).map((p) => {
-                const vitals = liveVitalsMap[p.id] || liveVitalsMap['P12345'];
+                const vitals = p.deviceId ? liveVitalsMap[p.id] : undefined;
                 return (
                   <div
                     key={p.id}

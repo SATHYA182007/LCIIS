@@ -65,16 +65,17 @@ export const DoctorVitalsPage: React.FC = () => {
           {/* Live Telemetry Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredPatients.map((p) => {
-              const v = liveVitalsMap[p.id] || (p.id === 'P12345' ? liveVitalsMap['P12345'] : undefined);
-              const isSpo2Low = Boolean(v && v.spo2?.value && v.spo2.value < 93);
-              const isHrHigh = Boolean(v && v.heartRate?.value && v.heartRate.value > 100);
+              const v = liveVitalsMap[p.id];
+              const hasHardware = Boolean(p.deviceId && v && v.heartRate?.value !== undefined);
+              const isSpo2Low = Boolean(hasHardware && v.spo2?.value && v.spo2.value < 93);
+              const isHrHigh = Boolean(hasHardware && v.heartRate?.value && v.heartRate.value > 100);
               const isAlerting = isSpo2Low || isHrHigh;
 
               return (
                 <div
                   key={p.id}
                   className={`card-clinical p-5 bg-white space-y-4 border-t-4 ${
-                    isAlerting ? 'border-t-red-500 shadow-md' : 'border-t-teal-600'
+                    !hasHardware ? 'border-t-slate-300' : isAlerting ? 'border-t-red-500 shadow-md' : 'border-t-teal-600'
                   }`}
                 >
                   {/* Card Header */}
@@ -86,53 +87,54 @@ export const DoctorVitalsPage: React.FC = () => {
                       <div className="text-xs text-gray-500">{p.hospitalId} • {p.ward} ({p.bed})</div>
                     </div>
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                      isAlerting ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-emerald-100 text-emerald-700'
+                      !hasHardware ? 'bg-slate-100 text-slate-600' : isAlerting ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-emerald-100 text-emerald-700'
                     }`}>
-                      {isAlerting ? 'DETERIORATING' : 'STABLE'}
+                      {!hasHardware ? 'STANDBY (NO HARDWARE)' : isAlerting ? 'DETERIORATING' : 'STABLE'}
                     </span>
                   </div>
 
                   {/* Telemetry Grid Parameters */}
-                  {v ? (
+                  {hasHardware ? (
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                         <div className="text-[10px] text-gray-400 font-bold uppercase">Heart Rate</div>
                         <div className={`font-black text-base mt-0.5 ${(v.heartRate?.value || 0) > 100 ? 'text-red-600' : 'text-slate-900'}`}>
-                          {v.heartRate?.value || 80} <span className="text-[10px] font-normal text-gray-500">BPM</span>
+                          {v.heartRate?.value} <span className="text-[10px] font-normal text-gray-500">BPM</span>
                         </div>
                       </div>
 
                       <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                         <div className="text-[10px] text-gray-400 font-bold uppercase">Oxygen SpO2</div>
                         <div className={`font-black text-base mt-0.5 ${(v.spo2?.value || 100) < 94 ? 'text-red-600' : 'text-slate-900'}`}>
-                          {v.spo2?.value || 98}%
+                          {v.spo2?.value}%
                         </div>
                       </div>
 
                       <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                         <div className="text-[10px] text-gray-400 font-bold uppercase">Blood Pressure</div>
                         <div className="font-bold text-slate-900 text-sm mt-0.5">
-                          {v.bloodPressure ? `${v.bloodPressure.systolic.value}/${v.bloodPressure.diastolic.value}` : '120/80'} <span className="text-[10px] font-normal text-gray-500">mmHg</span>
+                          {v.bloodPressure ? `${v.bloodPressure.systolic.value}/${v.bloodPressure.diastolic.value}` : '--/--'} <span className="text-[10px] font-normal text-gray-500">mmHg</span>
                         </div>
                       </div>
 
                       <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                         <div className="text-[10px] text-gray-400 font-bold uppercase">Resp Rate</div>
                         <div className="font-bold text-slate-900 text-sm mt-0.5">
-                          {v.respiratoryRate?.value || 16} <span className="text-[10px] font-normal text-gray-500">/min</span>
+                          {v.respiratoryRate?.value} <span className="text-[10px] font-normal text-gray-500">/min</span>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 bg-gray-50 rounded-lg text-center text-xs text-gray-400">
-                      Bedside device offline — live readings unavailable
+                    <div className="p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1">
+                      <div className="text-xs font-bold text-slate-700">No Hardware Telemetry Linked</div>
+                      <p className="text-[11px] text-slate-400">Vitals stream will begin once ESP32 device connects to Bed {p.bed}</p>
                     </div>
                   )}
 
                   {/* Card Action Footer */}
                   <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                     <span className="text-[11px] text-gray-400 font-mono">
-                      Last telemetry beat: {new Date(v?.lastUpdated || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      {hasHardware ? `Last beat: ${new Date(v.lastUpdated || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : 'Hardware status: Unlinked'}
                     </span>
                     <button
                       onClick={() => setActiveModalPatientId(p.id)}

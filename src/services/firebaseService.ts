@@ -641,16 +641,37 @@ export const deletePatientVitalsFromDB = async (patientId: string): Promise<void
 export const purgeUnlinkedVitalsFromRTDB = async (): Promise<void> => {
   if (!rtdb) return;
   try {
+    // Get active streaming devices from devices/ node
+    const devicesSnap = await get(ref(rtdb, 'devices'));
+    const activeDevicePatientIds = new Set<string>();
+    if (devicesSnap.exists()) {
+      const devVal = devicesSnap.val();
+      Object.values(devVal).forEach((d: any) => {
+        if (d && d.patientId) activeDevicePatientIds.add(d.patientId);
+      });
+    }
+
     const vitalsRef = ref(rtdb, 'liveVitals');
     const snapshot = await get(vitalsRef);
     if (snapshot.exists()) {
       const data = snapshot.val();
       for (const id of Object.keys(data)) {
-        if (id !== 'LCIIS-P-000001' && id !== 'P12345') {
+        if (!activeDevicePatientIds.has(id)) {
           const itemRef = ref(rtdb, `liveVitals/${id}`);
           await remove(itemRef);
           const historyRef = ref(rtdb, `vitalHistory/${id}`);
           await remove(historyRef);
+        }
+      }
+    }
+
+    // Also strip deviceId from patients that don't have active hardware devices
+    const patientsSnap = await get(ref(rtdb, 'patients'));
+    if (patientsSnap.exists()) {
+      const pVal = patientsSnap.val();
+      for (const [pId, pObj] of Object.entries<any>(pVal)) {
+        if (pObj?.deviceId && !activeDevicePatientIds.has(pId)) {
+          await update(ref(rtdb, `patients/${pId}`), { deviceId: null });
         }
       }
     }

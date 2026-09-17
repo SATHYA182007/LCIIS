@@ -143,7 +143,7 @@ export const DoctorPatientsPage: React.FC = () => {
                       </tr>
                     ) : (
                       filteredPatients.map((p) => {
-                        const v = liveVitalsMap[p.id] || (p.id === 'P12345' ? liveVitalsMap['P12345'] : undefined);
+                        const v = p.deviceId ? liveVitalsMap[p.id] : undefined;
                         return (
                           <tr key={p.id} className="hover:bg-teal-50/30 transition-colors">
                             <td className="p-3.5">
@@ -196,7 +196,8 @@ export const DoctorPatientsPage: React.FC = () => {
             /* Render Grid View */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPatients.map((p) => {
-                const v = liveVitalsMap[p.id] || liveVitalsMap['P12345'];
+                const v = p.deviceId ? liveVitalsMap[p.id] : undefined;
+                const hasV = Boolean(p.deviceId && v && v.spo2?.value !== undefined);
                 return (
                   <div key={p.id} className="card-clinical p-5 bg-white space-y-4 hover:border-teal-300 transition-all">
                     <div className="flex justify-between items-start">
@@ -220,7 +221,7 @@ export const DoctorPatientsPage: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-[10px] text-gray-400 font-bold uppercase">SpO2 Level</div>
-                        <div className="font-black text-slate-900 text-sm mt-0.5">{v ? `${v.spo2?.value || 98}%` : 'N/A'}</div>
+                        <div className="font-black text-slate-900 text-sm mt-0.5">{hasV && v?.spo2 ? `${v.spo2.value}%` : '--'}</div>
                       </div>
                     </div>
 

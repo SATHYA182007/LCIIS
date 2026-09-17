@@ -41,7 +41,7 @@ export const PatientVitalsDetailsPage: React.FC = () => {
   } = useRealtime();
 
   const patient = getPatientById(patientId);
-  const vitals = liveVitalsMap[patientId] || (patientId === 'P12345' ? liveVitalsMap['P12345'] : undefined);
+  const vitals = patientId ? liveVitalsMap[patientId] : undefined;
   const device = devices.find((d) => d.patientId === patientId);
 
   const [activeChartTab, setActiveChartTab] = useState<'hr' | 'spo2' | 'bp' | 'rr' | 'temp'>('hr');
