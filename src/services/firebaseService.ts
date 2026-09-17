@@ -171,32 +171,39 @@ export const updateLiveVitals = async (
 
   const sysVal = vitalsData.systolicBP !== undefined 
     ? (typeof vitalsData.systolicBP === 'number' ? vitalsData.systolicBP : vitalsData.systolicBP.value)
-    : (vitalsData.bloodPressure?.systolic ? (typeof vitalsData.bloodPressure.systolic === 'number' ? vitalsData.bloodPressure.systolic : vitalsData.bloodPressure.systolic.value) : 120);
+    : (vitalsData.bloodPressure?.systolic ? (typeof vitalsData.bloodPressure.systolic === 'number' ? vitalsData.bloodPressure.systolic : vitalsData.bloodPressure.systolic.value) : undefined);
 
   const diaVal = vitalsData.diastolicBP !== undefined 
     ? (typeof vitalsData.diastolicBP === 'number' ? vitalsData.diastolicBP : vitalsData.diastolicBP.value)
-    : (vitalsData.bloodPressure?.diastolic ? (typeof vitalsData.bloodPressure.diastolic === 'number' ? vitalsData.bloodPressure.diastolic : vitalsData.bloodPressure.diastolic.value) : 80);
+    : (vitalsData.bloodPressure?.diastolic ? (typeof vitalsData.bloodPressure.diastolic === 'number' ? vitalsData.bloodPressure.diastolic : vitalsData.bloodPressure.diastolic.value) : undefined);
+
+  const hrVal = typeof vitalsData.heartRate === 'number' ? vitalsData.heartRate : vitalsData.heartRate?.value;
+  const spo2Val = typeof vitalsData.spo2 === 'number' ? vitalsData.spo2 : vitalsData.spo2?.value;
+  const tempVal = typeof vitalsData.temperature === 'number' ? vitalsData.temperature : vitalsData.temperature?.value;
+  const rrVal = typeof vitalsData.respiratoryRate === 'number' ? vitalsData.respiratoryRate : vitalsData.respiratoryRate?.value;
 
   const rawPayload = {
-    heartRate: typeof vitalsData.heartRate === 'number' ? vitalsData.heartRate : vitalsData.heartRate?.value || 82,
-    spo2: typeof vitalsData.spo2 === 'number' ? vitalsData.spo2 : vitalsData.spo2?.value || 98,
-    temperature: typeof vitalsData.temperature === 'number' ? vitalsData.temperature : vitalsData.temperature?.value || 37.1,
-    respiratoryRate: typeof vitalsData.respiratoryRate === 'number' ? vitalsData.respiratoryRate : vitalsData.respiratoryRate?.value || 18,
+    heartRate: hrVal,
+    spo2: spo2Val,
+    temperature: tempVal,
+    respiratoryRate: rrVal,
     systolicBP: sysVal,
     diastolicBP: diaVal,
     timestamp: timestamp
   };
 
   // Structured LiveVitals payload for frontend consumption
+  const bpStructured = (sysVal !== undefined || diaVal !== undefined) ? {
+    systolic: formatVital(sysVal)!,
+    diastolic: formatVital(diaVal)!
+  } : undefined;
+
   const structuredPayload: LiveVitals = {
     heartRate: formatVital(vitalsData.heartRate),
     spo2: formatVital(vitalsData.spo2),
     temperature: formatVital(vitalsData.temperature),
     respiratoryRate: formatVital(vitalsData.respiratoryRate),
-    bloodPressure: {
-      systolic: formatVital(sysVal)!,
-      diastolic: formatVital(diaVal)!
-    },
+    bloodPressure: bpStructured,
     urineOutput: formatVital(vitalsData.urineOutput),
     lastUpdated: timeString
   };
@@ -548,11 +555,7 @@ export const seedSamplePatientsToFirebase = async (): Promise<number> => {
   ];
 
   const sampleVitals = [
-    { patientId: 'LCIIS-P-000001', hr: 82, spo2: 98, temp: 37.1, sys: 120, dia: 80, rr: 18 },
-    { patientId: 'LCIIS-P-000002', hr: 118, spo2: 89, temp: 38.6, sys: 155, dia: 95, rr: 26 },
-    { patientId: 'LCIIS-P-000003', hr: 95, spo2: 92, temp: 37.8, sys: 140, dia: 90, rr: 22 },
-    { patientId: 'LCIIS-P-000004', hr: 76, spo2: 97, temp: 36.8, sys: 118, dia: 75, rr: 16 },
-    { patientId: 'LCIIS-P-000005', hr: 70, spo2: 99, temp: 36.6, sys: 112, dia: 70, rr: 14 }
+    { patientId: 'LCIIS-P-000001', hr: 82, spo2: 98, temp: 37.1, sys: 120, dia: 80, rr: 18 }
   ];
 
   for (const patient of samplePatients) {
@@ -627,10 +630,19 @@ export const updatePatientInDB = async (patientId: string, updates: Partial<Pati
   await update(patientRef, cleanedPayload);
 };
 
+export const deletePatientVitalsFromDB = async (patientId: string): Promise<void> => {
+  if (!rtdb) return;
+  const vitalsRef = ref(rtdb, `liveVitals/${patientId}`);
+  await remove(vitalsRef);
+  const historyRef = ref(rtdb, `vitalHistory/${patientId}`);
+  await remove(historyRef);
+};
+
 export const deletePatientFromDB = async (patientId: string): Promise<void> => {
   const db = getRTDB();
   const patientRef = ref(db, `patients/${patientId}`);
   await remove(patientRef);
+  await deletePatientVitalsFromDB(patientId);
 };
 
 export const updateUserInDB = async (userId: string, updates: any): Promise<void> => {

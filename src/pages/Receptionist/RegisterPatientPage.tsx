@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import type { Patient } from '../../types';
 
 export const RegisterPatientPage: React.FC = () => {
-  const { addPatient, updateLiveVitals } = useRealtime();
+  const { addPatient } = useRealtime();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -208,16 +208,7 @@ export const RegisterPatientPage: React.FC = () => {
 
       const savedPatient = await addPatient(newPatientPayload);
 
-      // Initialize default baseline vitals under liveVitals/{patientId}
-      await updateLiveVitals(patientId, {
-        heartRate: 80,
-        spo2: 98,
-        temperature: 36.8,
-        respiratoryRate: 16,
-        systolicBP: 120,
-        diastolicBP: 80,
-        timestamp: Date.now()
-      });
+      toast.success(`Patient ${fullName} successfully registered into hospital registry as ${patientId}.`);
 
       setCreatedPatient(savedPatient);
       toast.success(`Patient registered successfully! Generated ID: ${patientId}`, {

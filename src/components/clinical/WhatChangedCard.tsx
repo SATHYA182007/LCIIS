@@ -214,7 +214,7 @@ export const WhatChangedCard: React.FC<WhatChangedCardProps> = ({
                         <Activity className="w-3 h-3 text-teal-600 mr-1" /> Oxygen (SpO2)
                       </div>
                       <div className="font-bold text-slate-900 text-sm mt-0.5">
-                        {vitals.spo2?.value || 98}% <span className="text-xs font-normal text-gray-500">Live</span>
+                        {vitals.spo2?.value !== undefined ? `${vitals.spo2.value}%` : '--'} <span className="text-xs font-normal text-gray-500">Live</span>
                       </div>
                       <div className="text-[10px] font-bold text-emerald-600 mt-1">Optimal Saturation (≥95%)</div>
                     </div>
@@ -224,7 +224,7 @@ export const WhatChangedCard: React.FC<WhatChangedCardProps> = ({
                         <Activity className="w-3 h-3 text-teal-600 mr-1" /> Blood Pressure
                       </div>
                       <div className="font-bold text-slate-900 text-sm mt-0.5">
-                        {vitals.bloodPressure?.systolic?.value || 120}/{vitals.bloodPressure?.diastolic?.value || 80} <span className="text-xs font-normal text-gray-500">mmHg</span>
+                        {vitals.bloodPressure?.systolic?.value !== undefined ? `${vitals.bloodPressure.systolic.value}/${vitals.bloodPressure.diastolic?.value || '--'}` : '--/--'} <span className="text-xs font-normal text-gray-500">mmHg</span>
                       </div>
                       <div className="text-[10px] font-bold text-emerald-600 mt-1">Normotensive Range</div>
                     </div>
@@ -234,7 +234,7 @@ export const WhatChangedCard: React.FC<WhatChangedCardProps> = ({
                         <Activity className="w-3 h-3 text-teal-600 mr-1" /> Resp. Rate
                       </div>
                       <div className="font-bold text-slate-900 text-sm mt-0.5">
-                        {vitals.respiratoryRate?.value || 16} <span className="text-xs font-normal text-gray-500">/min</span>
+                        {vitals.respiratoryRate?.value !== undefined ? vitals.respiratoryRate.value : '--'} <span className="text-xs font-normal text-gray-500">/min</span>
                       </div>
                       <div className="text-[10px] font-bold text-emerald-600 mt-1">Eupneic Baseline</div>
                     </div>
