@@ -44,7 +44,8 @@ import {
   updateLiveVitals as firebaseUpdateLiveVitals,
   acknowledgeAlert as firebaseAcknowledgeAlert,
   updateDeviceStatus as firebaseUpdateDeviceStatus,
-  seedInitialDatabaseIfEmpty
+  seedInitialDatabaseIfEmpty,
+  purgeUnlinkedVitalsFromRTDB
 } from '../services/firebaseService';
 
 import { TrendAnalysisEngine } from '../services/trendService';
@@ -183,8 +184,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsLoadingFirebase(true);
         setFirebaseError(null);
 
-        // Seed default structure if empty
+        // Seed default structure if empty and purge residual mock vitals for unlinked patients
         await seedInitialDatabaseIfEmpty();
+        await purgeUnlinkedVitalsFromRTDB();
 
         // 1. Subscribe to Patients
         unsubPatients = subscribeToPatients(

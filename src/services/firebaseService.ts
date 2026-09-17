@@ -638,6 +638,27 @@ export const deletePatientVitalsFromDB = async (patientId: string): Promise<void
   await remove(historyRef);
 };
 
+export const purgeUnlinkedVitalsFromRTDB = async (): Promise<void> => {
+  if (!rtdb) return;
+  try {
+    const vitalsRef = ref(rtdb, 'liveVitals');
+    const snapshot = await get(vitalsRef);
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      for (const id of Object.keys(data)) {
+        if (id !== 'LCIIS-P-000001' && id !== 'P12345') {
+          const itemRef = ref(rtdb, `liveVitals/${id}`);
+          await remove(itemRef);
+          const historyRef = ref(rtdb, `vitalHistory/${id}`);
+          await remove(historyRef);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Purge unlinked vitals error:', err);
+  }
+};
+
 export const deletePatientFromDB = async (patientId: string): Promise<void> => {
   const db = getRTDB();
   const patientRef = ref(db, `patients/${patientId}`);

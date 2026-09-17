@@ -374,7 +374,7 @@ export const AdminPatientsPage: React.FC = () => {
                         <td className="p-3.5 text-[11px]">
                           {vitals && vitals.heartRate?.value !== undefined ? (
                             <span className="font-semibold text-slate-800">
-                              HR {vitals.heartRate.value} • SpO2 {vitals.spo2?.value || 98}%
+                              HR {vitals.heartRate.value} • SpO2 {vitals.spo2?.value !== undefined ? `${vitals.spo2.value}%` : '--'}
                             </span>
                           ) : (
                             <span className="text-slate-400 font-semibold text-[10px]">Awaiting Telemetry</span>

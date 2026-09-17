@@ -168,7 +168,7 @@ export const DoctorPatientsPage: React.FC = () => {
                               {v && v.heartRate?.value !== undefined ? (
                                 <div className="space-x-2">
                                   <span className="font-semibold text-slate-800">HR: {v.heartRate.value}</span>
-                                  <span className="font-semibold text-teal-700">SpO2: {v.spo2?.value || 98}%</span>
+                                  <span className="font-semibold text-teal-700">SpO2: {v.spo2?.value !== undefined ? `${v.spo2.value}%` : '--'}</span>
                                 </div>
                               ) : (
                                 <span className="text-slate-400 font-semibold text-[10px]">Awaiting Telemetry</span>

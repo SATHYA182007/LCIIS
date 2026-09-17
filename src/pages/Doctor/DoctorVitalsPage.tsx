@@ -65,7 +65,7 @@ export const DoctorVitalsPage: React.FC = () => {
           {/* Live Telemetry Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredPatients.map((p) => {
-              const v = liveVitalsMap[p.id] || liveVitalsMap['P12345'];
+              const v = liveVitalsMap[p.id] || (p.id === 'P12345' ? liveVitalsMap['P12345'] : undefined);
               const isSpo2Low = Boolean(v && v.spo2?.value && v.spo2.value < 93);
               const isHrHigh = Boolean(v && v.heartRate?.value && v.heartRate.value > 100);
               const isAlerting = isSpo2Low || isHrHigh;

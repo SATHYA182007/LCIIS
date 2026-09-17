@@ -43,8 +43,8 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
   const [formTemp, setFormTemp] = useState<number>(36.8);
 
   const patient = patientId ? getPatientById(patientId) : null;
-  const vitals = patientId ? (liveVitalsMap[patientId] || liveVitalsMap['P12345']) : null;
-  const device = devices.find((d) => d.patientId === patientId || d.patientId === 'P12345') || devices[0];
+  const vitals = patientId ? (liveVitalsMap[patientId] || (patientId === 'P12345' ? liveVitalsMap['P12345'] : undefined)) : null;
+  const device = devices.find((d) => d.patientId === patientId) || devices[0];
 
   // Sync controlled state whenever vitals or patientId changes
   useEffect(() => {

@@ -40,8 +40,8 @@ export const PatientVitalsDetailsPage: React.FC = () => {
   } = useRealtime();
 
   const patient = getPatientById(patientId);
-  const vitals = liveVitalsMap[patientId] || liveVitalsMap['P12345'];
-  const device = devices.find((d) => d.patientId === patientId || d.patientId === 'P12345') || devices[0];
+  const vitals = liveVitalsMap[patientId] || (patientId === 'P12345' ? liveVitalsMap['P12345'] : undefined);
+  const device = devices.find((d) => d.patientId === patientId) || devices[0];
 
   const [activeChartTab, setActiveChartTab] = useState<'hr' | 'spo2' | 'bp' | 'rr' | 'temp'>('hr');
   const [isUpdateVitalsModalOpen, setIsUpdateVitalsModalOpen] = useState(false);

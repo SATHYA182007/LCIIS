@@ -70,7 +70,7 @@ export const NursePatientsPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 font-medium">
                   {assignedPatients.map((p) => {
-                    const v = liveVitalsMap[p.id] || liveVitalsMap['P12345'];
+                    const v = liveVitalsMap[p.id] || (p.id === 'P12345' ? liveVitalsMap['P12345'] : undefined);
                     return (
                       <tr key={p.id} className="hover:bg-teal-50/30 transition-colors">
                         <td className="p-3.5">

@@ -65,6 +65,20 @@ export const TestVitalsWidget: React.FC = () => {
     }
   };
 
+  const handleClearVitals = async () => {
+    if (!selectedPatientId) return;
+    setIsUpdating(true);
+    try {
+      const { deletePatientVitalsFromDB } = await import('../../services/firebaseService');
+      await deletePatientVitalsFromDB(selectedPatientId);
+      toast.success(`Cleared vitals for ${selectedPatientId} in Firebase. Reset to Awaiting Telemetry.`);
+    } catch (err: any) {
+      toast.error('Failed to clear vitals: ' + err.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <>
       {/* Floating Toggle Button */}
@@ -222,24 +236,35 @@ export const TestVitalsWidget: React.FC = () => {
               </div>
             </div>
 
-            {/* Action Submit */}
-            <button
-              type="submit"
-              disabled={isUpdating}
-              className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-slate-950 font-black text-xs py-2.5 rounded-xl shadow-lg shadow-teal-500/20 transition-all flex items-center justify-center space-x-2"
-            >
-              {isUpdating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
-                  <span>Writing to Firebase...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 text-slate-950" />
-                  <span>UPDATE VITALS</span>
-                </>
-              )}
-            </button>
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="submit"
+                disabled={isUpdating}
+                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-slate-950 font-black text-xs py-2.5 rounded-xl shadow-lg shadow-teal-500/20 transition-all flex items-center justify-center space-x-1.5"
+              >
+                {isUpdating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                    <span>Writing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 text-slate-950" />
+                    <span>WRITE VITALS</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClearVitals}
+                disabled={isUpdating}
+                className="w-full bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center space-x-1"
+              >
+                <span>CLEAR / UNLINK</span>
+              </button>
+            </div>
           </form>
         </div>
       )}

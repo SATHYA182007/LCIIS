@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Header } from '../../components/layout/Header';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { exportPatientPDF } from '../../utils/exportUtils';
+import { deletePatientVitalsFromDB } from '../../services/firebaseService';
 import { WhatChangedCard } from '../../components/clinical/WhatChangedCard';
 import { LiveVitalGrid } from '../../components/vitals/LiveVitalGrid';
 import {
@@ -26,7 +27,8 @@ import {
   ChevronLeft,
   TrendingUp,
   TrendingDown,
-  FlaskConical
+  FlaskConical,
+  WifiOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -221,6 +223,20 @@ export const PatientDetailsPage: React.FC = () => {
               >
                 <FileText className="w-3.5 h-3.5" /> <span>Export PDF</span>
               </button>
+
+              {vitals && (
+                <button
+                  onClick={async () => {
+                    await deletePatientVitalsFromDB(patient.id);
+                    toast.success(`Cleared mock telemetry for ${patient.name}. Patient status reset to Awaiting Telemetry.`);
+                  }}
+                  className="px-3 py-1.5 bg-rose-800 hover:bg-rose-900 text-white text-xs font-bold rounded-lg shadow-xs flex items-center space-x-1 transition-all cursor-pointer"
+                  title="Disconnect telemetry hardware stream and reset vitals to unlinked/empty state"
+                >
+                  <WifiOff className="w-3.5 h-3.5 text-rose-200" />
+                  <span>Clear Telemetry</span>
+                </button>
+              )}
             </div>
           </div>
 
