@@ -62,8 +62,8 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
 
   if (!isOpen || !patientId || !patient) return null;
 
-  const hrVal = hasHardware ? vitals?.heartRate?.value : null;
-  const spo2Val = hasHardware ? vitals?.spo2?.value : null;
+  const hrVal = (hasHardware && vitals?.heartRate?.value !== undefined && vitals.heartRate.value > 0) ? vitals.heartRate.value : null;
+  const spo2Val = (hasHardware && vitals?.spo2?.value !== undefined && vitals.spo2.value > 0) ? vitals.spo2.value : null;
   const sysVal = hasHardware ? vitals?.bloodPressure?.systolic?.value : null;
   const diaVal = hasHardware ? vitals?.bloodPressure?.diastolic?.value : null;
   const rrVal = hasHardware ? vitals?.respiratoryRate?.value : null;
@@ -272,7 +272,7 @@ export const PatientVitalsModal: React.FC<PatientVitalsModalProps> = ({ patientI
               </div>
               <div className="flex items-baseline space-x-2">
                 <span className={`text-3xl font-black ${hasHardware ? (isSpo2Low ? 'text-amber-600' : 'text-slate-900') : 'text-slate-400'}`}>
-                  {hasHardware ? `${spo2Val}%` : '--'}
+                  {hasHardware && spo2Val !== null ? `${spo2Val}%` : '--'}
                 </span>
                 <span className="text-xs text-gray-500 font-bold">{hasHardware ? 'Live' : 'Standby'}</span>
               </div>
