@@ -12,8 +12,8 @@ export class AlertEngine {
     riskAssessment: RiskAssessment,
     explanation: ExplanationSummary
   ): { updatedAlerts: Alert[]; newAlertCreated: Alert | null } {
-    // Only generate alerts for High/Critical risk or multi-parameter concerns
-    if (riskAssessment.overallRiskScore < 50 && explanation.concerns.length < 2) {
+    // Generate alerts according to situation threshold (Medium: 25-49, High: 50-74, Critical: 75+)
+    if (riskAssessment.overallRiskScore < 25 && explanation.concerns.length < 1) {
       return { updatedAlerts: existingAlerts, newAlertCreated: null };
     }
 
@@ -26,6 +26,7 @@ export class AlertEngine {
     let priority: AlertPriority = 'MEDIUM';
     if (riskAssessment.overallRiskScore >= 75) priority = 'CRITICAL';
     else if (riskAssessment.overallRiskScore >= 50) priority = 'HIGH';
+    else priority = 'MEDIUM';
 
     // Deduplication check: search for existing NEW/ACKNOWLEDGED alert for same patient in last 30 minutes
     const nowMs = Date.now();
