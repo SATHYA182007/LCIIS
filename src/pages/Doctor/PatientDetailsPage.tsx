@@ -430,6 +430,7 @@ export const PatientDetailsPage: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
 
               {/* Lab Trend Graphs */}
               <div className="card-clinical p-5 bg-white space-y-4">
