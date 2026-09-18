@@ -1,22 +1,42 @@
 import React from 'react';
 import type { Patient, LaboratoryResult, DoctorRemark, MedicationRecord, InterventionRecord } from '../../types';
-import { Building2, Calendar, FileText, FlaskConical, Pill, Stethoscope, ShieldCheck, History, UserCheck, Heart } from 'lucide-react';
+import { useRealtime } from '../../context/RealtimeContext';
+import { FileText, FlaskConical, Pill, ShieldCheck, History, UserCheck, Heart, Stethoscope } from 'lucide-react';
 
 interface CentralizedPatientHistoryCardProps {
-  patient: Patient;
-  labResults: LaboratoryResult[];
-  doctorRemarks: DoctorRemark[];
-  medications: MedicationRecord[];
-  interventions: InterventionRecord[];
+  patient?: Patient;
+  patientId?: string;
+  labResults?: LaboratoryResult[];
+  doctorRemarks?: DoctorRemark[];
+  medications?: MedicationRecord[];
+  interventions?: InterventionRecord[];
 }
 
 export const CentralizedPatientHistoryCard: React.FC<CentralizedPatientHistoryCardProps> = ({
-  patient,
-  labResults,
-  doctorRemarks,
-  medications,
-  interventions,
+  patient: propsPatient,
+  patientId: propsPatientId,
+  labResults: propsLabs,
+  doctorRemarks: propsRemarks,
+  medications: propsMeds,
+  interventions: propsInterventions,
 }) => {
+  const realtime = useRealtime();
+
+  const targetId = propsPatient?.id || propsPatientId || 'P12345';
+  const patient = propsPatient || realtime.getPatientById(targetId);
+
+  const labResults = propsLabs || realtime.labResults;
+  const doctorRemarks = propsRemarks || realtime.doctorRemarks;
+  const medications = propsMeds || realtime.medications;
+  const interventions = propsInterventions || realtime.interventions;
+
+  if (!patient) {
+    return (
+      <div className="card-clinical p-6 bg-white text-center text-gray-400 text-xs">
+        No patient record found for EHR lookup ID: {targetId}
+      </div>
+    );
+  }
   const patientLabs = labResults.filter(
     (l) => l.patientId === patient.id || l.patientId === patient.hospitalId || (patient.id === 'P12345' && l.patientId === 'P12345')
   );
@@ -285,6 +305,24 @@ export const CentralizedPatientHistoryCard: React.FC<CentralizedPatientHistoryCa
               )}
             </div>
           </div>
+
+          {/* Care Actions History */}
+          {patientInterventions.length > 0 && (
+            <div className="card-clinical p-4 bg-white space-y-3">
+              <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center border-b border-gray-100 pb-2">
+                <Stethoscope className="w-4 h-4 mr-1.5 text-emerald-700" />
+                Care Actions Recorded ({patientInterventions.length})
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {patientInterventions.map((i) => (
+                  <div key={i.id} className="p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-1">
+                    <div className="font-bold text-slate-900">{i.action}</div>
+                    <div className="text-[10px] text-gray-500">Outcome: {i.outcome} • Performed by: {i.performedBy}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

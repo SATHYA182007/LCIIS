@@ -45,7 +45,7 @@ export class BioMedHackathonMlModel implements RiskPredictionModel {
    */
   public checkStaticThresholds(vitals: { hr: number; spo2: number; sys_bp: number; dia_bp: number; temp: number; fall: number }) {
     const alerts: string[] = [];
-    if (vitals.hr > 100) alerts.append ? null : alerts.push(`Heart Rate (${vitals.hr} bpm) is ABOVE safe limit (> 100 bpm: Tachycardia).`);
+    if (vitals.hr > 100) alerts.push(`Heart Rate (${vitals.hr} bpm) is ABOVE safe limit (> 100 bpm: Tachycardia).`);
     else if (vitals.hr < 60) alerts.push(`Heart Rate (${vitals.hr} bpm) is BELOW normal limit (< 60 bpm: Bradycardia).`);
 
     if (vitals.spo2 < 95) alerts.push(`SpO2 Level (${vitals.spo2}%) is BELOW safe threshold (< 95%: Hypoxemia).`);
@@ -145,7 +145,7 @@ export class BioMedHackathonMlModel implements RiskPredictionModel {
     // Feature 6: Fall Detection Physical Event
     if (vitals.fall === 1) votesAbnormal += 45;
 
-    const abnormalProbability = Math.min(100, Math.max(0, votesAbnormal));
+    const abnormalProbability = Math.min(100, Math.max(0, Math.round((votesAbnormal / totalTrees) * 100)));
     const isAbnormal = abnormalProbability >= 50;
 
     return {

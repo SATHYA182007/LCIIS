@@ -75,10 +75,6 @@ export const DoctorDashboard: React.FC = () => {
     return Boolean(selectedPatientObj.deviceId && v && v.heartRate?.value !== undefined);
   }, [selectedPatientObj, liveVitalsMap]);
 
-  const hasAnyConnectedHardware = useMemo(() => {
-    return patients.some((p) => Boolean(p.deviceId && liveVitalsMap[p.id]?.heartRate?.value !== undefined));
-  }, [patients, liveVitalsMap]);
-
   // Real-time Trend Graph Data for the selected patient
   const trendData = useMemo(() => {
     let currentHR = 76;

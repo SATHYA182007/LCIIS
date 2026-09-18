@@ -299,7 +299,7 @@ export const subscribeToLiveVitals = (
           map[patientId] = {
             heartRate: finalHr !== undefined ? { value: finalHr, unit: 'bpm', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
             spo2: finalSpo2 !== undefined ? { value: finalSpo2, unit: '%', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
-            temperature: { value: finalTemp, unit: '°C', timestamp: timeStr, source: tempSource as any, quality: isTempValid ? 'GOOD' : 'WEATHER_API_FALLBACK' },
+            temperature: { value: finalTemp, unit: '°C', timestamp: timeStr, source: tempSource as any, quality: isTempValid ? 'GOOD' : 'WARNING' },
             respiratoryRate: rr !== undefined ? { value: Number(rr), unit: 'bpm', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' } : undefined,
             bloodPressure: (sys !== undefined || dia !== undefined) ? {
               systolic: { value: Number(sys ?? 120), unit: 'mmHg', timestamp: timeStr, source: 'LIVE_SENSOR', quality: 'GOOD' },
@@ -335,13 +335,13 @@ export const subscribeToLiveVitals = (
       const abnHr = Math.round(145 + Math.sin(Date.now() / 2000) * 7);
       const abnSpo2 = Math.round(84 + Math.cos(Date.now() / 3000) * 2);
       map['LCIIS-P-000002'] = {
-        heartRate: { value: abnHr, unit: 'bpm', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'POOR' },
-        spo2: { value: abnSpo2, unit: '%', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'POOR' },
-        temperature: { value: 39.4, unit: '°C', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'POOR' },
-        respiratoryRate: { value: 28, unit: 'bpm', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'POOR' },
+        heartRate: { value: abnHr, unit: 'bpm', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'WARNING' },
+        spo2: { value: abnSpo2, unit: '%', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'WARNING' },
+        temperature: { value: 39.4, unit: '°C', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'WARNING' },
+        respiratoryRate: { value: 28, unit: 'bpm', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'WARNING' },
         bloodPressure: {
-          systolic: { value: 185, unit: 'mmHg', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'POOR' },
-          diastolic: { value: 115, unit: 'mmHg', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'POOR' }
+          systolic: { value: 185, unit: 'mmHg', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'WARNING' },
+          diastolic: { value: 115, unit: 'mmHg', timestamp: timeNow, source: 'LIVE_SENSOR', quality: 'WARNING' }
         },
         lastUpdated: timeNow
       };

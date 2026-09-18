@@ -8,7 +8,7 @@ import { Search, Eye, Filter, Grid, List, Users, Bell, AlertTriangle, CheckCircl
 import { toast } from 'sonner';
 
 export const DoctorPatientsPage: React.FC = () => {
-  const { patients, liveVitalsMap, triggerWatchAlert, clearAllAlerts } = useRealtime();
+  const { patients, liveVitalsMap, triggerWatchAlert } = useRealtime();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');

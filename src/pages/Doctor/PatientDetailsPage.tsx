@@ -512,7 +512,7 @@ export const PatientDetailsPage: React.FC = () => {
                   {activeVitalTab === 'spo2' && (
                     <div className="flex h-full items-center justify-center flex-col space-y-2">
                       <div className="text-3xl font-black text-teal-800">{vitals?.spo2?.value || '--'} %</div>
-                      <p className="text-xs text-gray-500">Live Pulse Oximetry Telemetry ({vitals?.spo2?.status || 'Active'})</p>
+                      <p className="text-xs text-gray-500">Live Pulse Oximetry Telemetry ({vitals?.spo2?.quality || 'Active'})</p>
                       <button
                         onClick={() => navigate(`/doctor/patients/${patient.id}/vitals`)}
                         className="text-xs font-bold text-teal-700 hover:underline pt-1"
@@ -525,7 +525,7 @@ export const PatientDetailsPage: React.FC = () => {
                   {activeVitalTab === 'hr' && (
                     <div className="flex h-full items-center justify-center flex-col space-y-2">
                       <div className="text-3xl font-black text-rose-700">{vitals?.heartRate?.value || '--'} BPM</div>
-                      <p className="text-xs text-gray-500">Continuous Electrocardiography Monitoring ({vitals?.heartRate?.status || 'Active'})</p>
+                      <p className="text-xs text-gray-500">Continuous Electrocardiography Monitoring ({vitals?.heartRate?.quality || 'Active'})</p>
                       <button
                         onClick={() => navigate(`/doctor/patients/${patient.id}/vitals`)}
                         className="text-xs font-bold text-teal-700 hover:underline pt-1"
