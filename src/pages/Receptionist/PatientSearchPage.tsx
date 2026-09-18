@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRealtime } from '../../context/RealtimeContext';
 import { Header } from '../../components/layout/Header';
 import { Sidebar } from '../../components/layout/Sidebar';
-import { Search, UserCheck, Phone, MapPin, User } from 'lucide-react';
+import { Search, UserCheck, Phone, MapPin, User, FileText } from 'lucide-react';
 
 export const PatientSearchPage: React.FC = () => {
+  const navigate = useNavigate();
   const { patients } = useRealtime();
   const [query, setQuery] = useState('');
 
@@ -91,8 +93,17 @@ export const PatientSearchPage: React.FC = () => {
                         <h3 className="font-extrabold text-slate-900 text-base mt-0.5">{p.name}</h3>
                       </div>
 
-                      <div className="text-xs text-gray-500 font-semibold">
-                        Registered: {p.registeredAt ? new Date(p.registeredAt).toLocaleDateString() : p.admissionDate}
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xs text-gray-500 font-semibold hidden sm:inline">
+                          Registered: {p.registeredAt ? new Date(p.registeredAt).toLocaleDateString() : p.admissionDate}
+                        </span>
+                        <button
+                          onClick={() => navigate(`/doctor/patients/${p.id}`)}
+                          className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded-lg shadow-2xs flex items-center space-x-1"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>View EHR Record</span>
+                        </button>
                       </div>
                     </div>
 

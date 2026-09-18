@@ -17,6 +17,8 @@ import {
   CartesianGrid,
   Legend
 } from 'recharts';
+import { TransferPatientModal } from '../../components/clinical/TransferPatientModal';
+import { CentralizedPatientHistoryCard } from '../../components/clinical/CentralizedPatientHistoryCard';
 import {
   Activity,
   FileText,
@@ -26,7 +28,10 @@ import {
   ChevronLeft,
   TrendingUp,
   TrendingDown,
-  FlaskConical
+  FlaskConical,
+  Bell,
+  ArrowRightLeft,
+  History
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,13 +52,17 @@ export const PatientDetailsPage: React.FC = () => {
     interventions,
     addDoctorRemark,
     addMedication,
-    addIntervention
+    addIntervention,
+    triggerWatchAlert
   } = useRealtime();
 
   const patient = getPatientById(patientId);
   const vitals = patientId ? liveVitalsMap[patientId] : undefined;
   const riskAssessment = getPatientRiskAssessment(patientId);
   const trends = getPatientTrends(patientId);
+
+  // Main View Tab state
+  const [activeMainTab, setActiveMainTab] = useState<'overview' | 'ehr_history'>('overview');
 
   // Tab state for Vital Sign Trends
   const [activeVitalTab, setActiveVitalTab] = useState<'creatinine' | 'crp' | 'spo2' | 'hr'>('creatinine');
@@ -62,6 +71,7 @@ export const PatientDetailsPage: React.FC = () => {
   const [isRemarkModalOpen, setIsRemarkModalOpen] = useState(false);
   const [isMedModalOpen, setIsMedModalOpen] = useState(false);
   const [isInterventionModalOpen, setIsInterventionModalOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   const [remarkText, setRemarkText] = useState('');
   const [medName, setMedName] = useState('');
@@ -172,10 +182,22 @@ export const PatientDetailsPage: React.FC = () => {
             {/* Patient Context Tabs */}
             <div className="flex space-x-1 bg-gray-200 p-1 rounded-xl">
               <button
-                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white text-teal-800 shadow-xs flex items-center space-x-1"
+                onClick={() => setActiveMainTab('overview')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center space-x-1 ${
+                  activeMainTab === 'overview' ? 'bg-white text-teal-800 shadow-xs' : 'text-gray-600 hover:text-slate-900'
+                }`}
               >
                 <FileText className="w-3.5 h-3.5 text-teal-700" />
                 <span>Clinical Overview</span>
+              </button>
+              <button
+                onClick={() => setActiveMainTab('ehr_history')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center space-x-1 ${
+                  activeMainTab === 'ehr_history' ? 'bg-white text-teal-800 shadow-xs' : 'text-gray-600 hover:text-slate-900'
+                }`}
+              >
+                <History className="w-3.5 h-3.5 text-teal-700" />
+                <span>Lifetime EHR History</span>
               </button>
               <button
                 onClick={() => navigate(`/doctor/patients/${patient.id}/labs`)}
@@ -193,7 +215,14 @@ export const PatientDetailsPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setIsTransferModalOpen(true)}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center space-x-1"
+                title="Transfer patient to General Ward upon recovery or change care location"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" /> <span>Transfer / Step-Down</span>
+              </button>
               <button
                 onClick={() => setIsRemarkModalOpen(true)}
                 className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded-lg shadow-xs flex items-center space-x-1"
@@ -211,6 +240,22 @@ export const PatientDetailsPage: React.FC = () => {
                 className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-xs flex items-center space-x-1"
               >
                 <Stethoscope className="w-3.5 h-3.5" /> <span>Care Action</span>
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await triggerWatchAlert(patient.id, 'CRITICAL');
+                    toast.error(`🚨 Sent CRITICAL alert signal for ${patient.name} to Nurse Watch!`, {
+                      description: `Watch displaying ALERT for ${patient.id}`
+                    });
+                  } catch (e: any) {
+                    toast.error('Failed to trigger watch alert');
+                  }
+                }}
+                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black rounded-lg shadow-xs flex items-center space-x-1"
+                title="Trigger Critical Alert for this patient on the Nurse Watch hardware"
+              >
+                <Bell className="w-3.5 h-3.5" /> <span>Alert Nurse Watch</span>
               </button>
               <button
                 onClick={() => {
@@ -232,6 +277,15 @@ export const PatientDetailsPage: React.FC = () => {
                 <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md font-bold">
                   {patient.hospitalId}
                 </span>
+                {patient.ward.includes('ICU') ? (
+                  <span className="px-2.5 py-0.5 bg-red-100 text-red-800 border border-red-200 text-xs font-black rounded-md flex items-center space-x-1">
+                    <span>ICU Admission</span>
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-black rounded-md flex items-center space-x-1">
+                    <span>General Ward</span>
+                  </span>
+                )}
               </div>
               <div className="text-xs text-gray-500 font-medium mt-1 flex flex-wrap gap-x-4 gap-y-1">
                 <span>Age: <strong>{patient.age} yrs</strong> ({patient.gender})</span>
@@ -242,7 +296,14 @@ export const PatientDetailsPage: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider ${
+              <button
+                onClick={() => setIsTransferModalOpen(true)}
+                className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center space-x-1.5 active:scale-95"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                <span>{patient.ward.includes('ICU') ? 'Step-Down to General Ward' : 'Transfer / Change Ward'}</span>
+              </button>
+              <span className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider ${
                 riskAssessment.riskBand === 'CRITICAL' ? 'bg-red-500 text-white' :
                 riskAssessment.riskBand === 'HIGH RISK' ? 'bg-orange-500 text-white' :
                 riskAssessment.riskBand === 'MONITOR' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
@@ -252,8 +313,12 @@ export const PatientDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* WHAT HAS CHANGED? Centerpiece */}
-          <WhatChangedCard
+          {activeMainTab === 'ehr_history' ? (
+            <CentralizedPatientHistoryCard patientId={patient.id} />
+          ) : (
+            <>
+              {/* WHAT HAS CHANGED? Centerpiece */}
+              <WhatChangedCard
             patient={patient}
             riskAssessment={riskAssessment}
             trends={trends}
@@ -365,122 +430,183 @@ export const PatientDetailsPage: React.FC = () => {
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Interactive Recharts Graph with Clean Parameter Selector */}
-          <div className="card-clinical p-4 sm:p-5 bg-white">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-200 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-slate-900">VITAL SIGN & LAB TREND GRAPHS</h3>
-              
-              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg overflow-x-auto max-w-full">
-                <button
-                  onClick={() => setActiveVitalTab('creatinine')}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition-colors whitespace-nowrap ${
-                    activeVitalTab === 'creatinine' ? 'bg-white text-teal-800 shadow-xs' : 'text-gray-600 hover:text-slate-900'
-                  }`}
-                >
-                  Creatinine
-                </button>
-                <button
-                  onClick={() => setActiveVitalTab('crp')}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition-colors whitespace-nowrap ${
-                    activeVitalTab === 'crp' ? 'bg-white text-teal-800 shadow-xs' : 'text-gray-600 hover:text-slate-900'
-                  }`}
-                >
-                  CRP
-                </button>
-              </div>
-            </div>
-
-            <div className="h-64 w-full">
-              {(activeVitalTab === 'creatinine' ? creatinineChartData : crpChartData).length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={(activeVitalTab === 'creatinine' ? creatinineChartData : crpChartData) as any}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="time" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey={activeVitalTab === 'creatinine' ? 'Creatinine' : 'CRP'}
-                      stroke={activeVitalTab === 'creatinine' ? '#f97316' : '#ef4444'}
-                      strokeWidth={3}
-                      dot={{ r: 5 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500">
-                  <FlaskConical className="w-8 h-8 text-slate-300 mb-2" />
-                  <p className="font-bold text-slate-700">No Longitudinal {activeVitalTab === 'creatinine' ? 'Creatinine' : 'CRP'} Readings Logged</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Laboratory data points will plot automatic trend lines here once lab results are entered.</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Notes, Medications & Care Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Doctor Notes */}
-            <div className="card-clinical p-5 bg-white">
-              <div className="flex items-center justify-between border-b border-gray-200 pb-3 mb-3">
-                <h3 className="text-sm font-bold text-slate-900 flex items-center">
-                  <FileText className="w-4 h-4 mr-1.5 text-teal-700" /> Doctor Notes
-                </h3>
-                <button onClick={() => setIsRemarkModalOpen(true)} className="text-xs font-bold text-teal-700 hover:underline">
-                  + Add Note
-                </button>
-              </div>
-
-              <div className="space-y-2.5 max-h-56 overflow-y-auto text-xs">
-                {doctorRemarks.filter((r) => r.patientId === patientId).length === 0 ? (
-                  <p className="text-gray-400 italic">No notes recorded yet.</p>
-                ) : (
-                  doctorRemarks.filter((r) => r.patientId === patientId).map((r) => (
-                    <div key={r.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex justify-between text-gray-500 font-medium mb-1">
-                        <span className="font-bold text-slate-900">{r.doctorName}</span>
-                        <span>{new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-                      <p className="text-slate-800">{r.remark}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Care Actions & Medications */}
-            <div className="card-clinical p-5 bg-white">
-              <div className="flex items-center justify-between border-b border-gray-200 pb-3 mb-3">
-                <h3 className="text-sm font-bold text-slate-900 flex items-center">
-                  <Stethoscope className="w-4 h-4 mr-1.5 text-teal-700" /> Medications & Care Actions
-                </h3>
-              </div>
-
-              <div className="space-y-3 max-h-56 overflow-y-auto text-xs">
-                <div>
-                  <div className="font-bold text-gray-400 uppercase tracking-wider text-[10px] mb-1">Active Medications</div>
-                  {medications.filter((m) => m.patientId === patientId).map((m) => (
-                    <div key={m.id} className="p-2 bg-teal-50/50 rounded border border-teal-100 flex justify-between mb-1">
-                      <span className="font-bold text-slate-900">{m.medicationName} ({m.dosage})</span>
-                      <span className="text-teal-800 font-semibold">{m.frequency}</span>
-                    </div>
-                  ))}
+              {/* Lab Trend Graphs */}
+              <div className="card-clinical p-5 bg-white space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center">
+                    <FlaskConical className="w-4 h-4 mr-2 text-teal-700" /> VITAL SIGN & LAB TREND TRAJECTORY
+                  </h3>
+                  <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg text-xs font-bold">
+                    <button
+                      onClick={() => setActiveVitalTab('creatinine')}
+                      className={`px-2.5 py-1 rounded-md transition-all ${
+                        activeVitalTab === 'creatinine' ? 'bg-white text-teal-800 shadow-xs' : 'text-gray-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Serum Creatinine
+                    </button>
+                    <button
+                      onClick={() => setActiveVitalTab('crp')}
+                      className={`px-2.5 py-1 rounded-md transition-all ${
+                        activeVitalTab === 'crp' ? 'bg-white text-teal-800 shadow-xs' : 'text-gray-600 hover:text-slate-900'
+                      }`}
+                    >
+                      C-Reactive Protein (CRP)
+                    </button>
+                    <button
+                      onClick={() => setActiveVitalTab('spo2')}
+                      className={`px-2.5 py-1 rounded-md transition-all ${
+                        activeVitalTab === 'spo2' ? 'bg-white text-teal-800 shadow-xs' : 'text-gray-600 hover:text-slate-900'
+                      }`}
+                    >
+                      SpO2 Oxygenation
+                    </button>
+                    <button
+                      onClick={() => setActiveVitalTab('hr')}
+                      className={`px-2.5 py-1 rounded-md transition-all ${
+                        activeVitalTab === 'hr' ? 'bg-white text-teal-800 shadow-xs' : 'text-gray-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Heart Rate
+                    </button>
+                  </div>
                 </div>
 
-                <div className="pt-1">
-                  <div className="font-bold text-gray-400 uppercase tracking-wider text-[10px] mb-1">Care Actions</div>
-                  {interventions.filter((i) => i.patientId === patientId).map((i) => (
-                    <div key={i.id} className="p-2 bg-gray-50 rounded border border-gray-200 mb-1">
-                      <div className="font-bold text-slate-800">{i.action}</div>
-                      <div className="text-[11px] text-gray-500 mt-0.5">Outcome: {i.outcome}</div>
+                <div className="h-64 w-full pt-2">
+                  {activeVitalTab === 'creatinine' && (
+                    creatinineChartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={creatinineChartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                          <XAxis dataKey="time" stroke="#94a3b8" fontSize={11} />
+                          <YAxis stroke="#94a3b8" fontSize={11} domain={['auto', 'auto']} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '12px' }} />
+                          <Legend wrapperStyle={{ fontSize: '12px' }} />
+                          <Line type="monotone" dataKey="Creatinine" stroke="#0d9488" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-gray-400 font-medium">No serial Creatinine readings recorded yet.</div>
+                    )
+                  )}
+
+                  {activeVitalTab === 'crp' && (
+                    crpChartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={crpChartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                          <XAxis dataKey="time" stroke="#94a3b8" fontSize={11} />
+                          <YAxis stroke="#94a3b8" fontSize={11} domain={['auto', 'auto']} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '12px' }} />
+                          <Legend wrapperStyle={{ fontSize: '12px' }} />
+                          <Line type="monotone" dataKey="CRP" stroke="#e11d48" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-gray-400 font-medium">No serial CRP readings recorded yet.</div>
+                    )
+                  )}
+
+                  {activeVitalTab === 'spo2' && (
+                    <div className="flex h-full items-center justify-center flex-col space-y-2">
+                      <div className="text-3xl font-black text-teal-800">{vitals?.spo2?.value || '--'} %</div>
+                      <p className="text-xs text-gray-500">Live Pulse Oximetry Telemetry ({vitals?.spo2?.status || 'Active'})</p>
+                      <button
+                        onClick={() => navigate(`/doctor/patients/${patient.id}/vitals`)}
+                        className="text-xs font-bold text-teal-700 hover:underline pt-1"
+                      >
+                        Open Full Live Telemetry Waveform Graph →
+                      </button>
                     </div>
-                  ))}
+                  )}
+
+                  {activeVitalTab === 'hr' && (
+                    <div className="flex h-full items-center justify-center flex-col space-y-2">
+                      <div className="text-3xl font-black text-rose-700">{vitals?.heartRate?.value || '--'} BPM</div>
+                      <p className="text-xs text-gray-500">Continuous Electrocardiography Monitoring ({vitals?.heartRate?.status || 'Active'})</p>
+                      <button
+                        onClick={() => navigate(`/doctor/patients/${patient.id}/vitals`)}
+                        className="text-xs font-bold text-teal-700 hover:underline pt-1"
+                      >
+                        Open Full Live Telemetry Waveform Graph →
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
+
+              {/* Doctor Notes, Medications & Interventions Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Doctor Notes & Remarks */}
+                <div className="card-clinical p-5 bg-white space-y-3">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                    <h3 className="text-sm font-bold text-slate-900 flex items-center">
+                      <FileText className="w-4 h-4 mr-2 text-teal-700" /> CLINICAL NOTES & OBSERVATIONS
+                    </h3>
+                    <button onClick={() => setIsRemarkModalOpen(true)} className="text-xs font-bold text-teal-700 hover:underline flex items-center">
+                      <Plus className="w-3.5 h-3.5 mr-0.5" /> Add Note
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {doctorRemarks.filter((r) => r.patientId === patientId).length === 0 ? (
+                      <p className="text-xs text-gray-400 italic py-4 text-center">No physician notes recorded for this patient.</p>
+                    ) : (
+                      doctorRemarks.filter((r) => r.patientId === patientId).map((r) => (
+                        <div key={r.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+                          <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
+                            <span>{r.doctorName}</span>
+                            <span>{new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <p className="text-slate-800 font-medium">{r.remark}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Active Medications & Care Actions */}
+                <div className="card-clinical p-5 bg-white space-y-3">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                    <h3 className="text-sm font-bold text-slate-900 flex items-center">
+                      <Pill className="w-4 h-4 mr-2 text-teal-700" /> MEDICATIONS & CARE ACTIONS
+                    </h3>
+                    <div className="flex space-x-2">
+                      <button onClick={() => setIsMedModalOpen(true)} className="text-xs font-bold text-slate-700 hover:text-teal-800 flex items-center">
+                        <Plus className="w-3.5 h-3.5 mr-0.5" /> Med
+                      </button>
+                      <button onClick={() => setIsInterventionModalOpen(true)} className="text-xs font-bold text-emerald-700 hover:underline flex items-center">
+                        <Plus className="w-3.5 h-3.5 mr-0.5" /> Care Action
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 max-h-56 overflow-y-auto text-xs">
+                    <div>
+                      <div className="font-bold text-gray-400 uppercase tracking-wider text-[10px] mb-1">Active Medications</div>
+                      {medications.filter((m) => m.patientId === patientId).map((m) => (
+                        <div key={m.id} className="p-2 bg-teal-50/50 rounded border border-teal-100 flex justify-between mb-1">
+                          <span className="font-bold text-slate-900">{m.medicationName} ({m.dosage})</span>
+                          <span className="text-teal-800 font-semibold">{m.frequency}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-1">
+                      <div className="font-bold text-gray-400 uppercase tracking-wider text-[10px] mb-1">Care Actions</div>
+                      {interventions.filter((i) => i.patientId === patientId).map((i) => (
+                        <div key={i.id} className="p-2 bg-gray-50 rounded border border-gray-200 mb-1">
+                          <div className="font-bold text-slate-800">{i.action}</div>
+                          <div className="text-[11px] text-gray-500 mt-0.5">Outcome: {i.outcome}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </main>
       </div>
 
@@ -601,6 +727,13 @@ export const PatientDetailsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Ward Transfer & Step-Down Modal */}
+      <TransferPatientModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        patient={patient}
+      />
     </div>
   );
 };

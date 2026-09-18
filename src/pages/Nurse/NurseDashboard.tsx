@@ -61,13 +61,29 @@ export const NurseDashboard: React.FC = () => {
       avgRR = Math.round(totalRR / connectedVitals.length);
     }
 
-    const times = ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
-    return times.map((t, idx) => ({
-      time: t,
-      'Ward Heart Rate': Math.round(Math.min(130, Math.max(60, avgHR + Math.sin(idx * 0.8) * 4))),
-      'Ward SpO2 %': Math.round(Math.min(100, Math.max(88, avgSpo2 + Math.cos(idx * 0.6) * 1.5))),
-      'Resp Rate': Math.round(Math.min(30, Math.max(12, avgRR + Math.cos(idx * 0.9) * 1.2)))
-    }));
+    // Lock timestamp ticks to 15-minute boundaries so time labels remain steady on live streams
+    const nowMs = Math.floor(Date.now() / (15 * 60 * 1000)) * (15 * 60 * 1000);
+    const now = new Date(nowMs);
+
+    const staticNurseHistory = {
+      hr: [74, 75, 76, 74, 75, 76, 77],
+      spo2: [98, 97, 98, 98, 97, 98, 97],
+      rr: [16, 17, 18, 17, 16, 17, 18]
+    };
+
+    return Array.from({ length: 8 }).map((_, i) => {
+      const offsetHours = (7 - i) * 2; // 2h intervals
+      const d = new Date(now.getTime() - offsetHours * 3600 * 1000);
+      const timeLabel = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const isCurrent = offsetHours === 0;
+
+      return {
+        time: timeLabel,
+        'Ward Heart Rate': isCurrent ? avgHR : staticNurseHistory.hr[i],
+        'Ward SpO2 %': isCurrent ? avgSpo2 : staticNurseHistory.spo2[i],
+        'Resp Rate': isCurrent ? avgRR : staticNurseHistory.rr[i]
+      };
+    });
   }, [liveVitalsMap]);
 
   // Fluid balance chart data across nurse observations
@@ -210,8 +226,8 @@ export const NurseDashboard: React.FC = () => {
                         }}
                       />
                       <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                      <Area type="monotone" dataKey="Ward Heart Rate" stroke="#0d9488" strokeWidth={2} fill="url(#nurseHR)" unit=" BPM" />
-                      <Area type="monotone" dataKey="Ward SpO2 %" stroke="#10b981" strokeWidth={2} fill="url(#nurseSpo2)" unit="%" />
+                      <Area type="monotone" dataKey="Ward Heart Rate" stroke="#0d9488" strokeWidth={2} fill="url(#nurseHR)" unit=" BPM" isAnimationActive={false} dot={{ r: 4, strokeWidth: 2, fill: "#0d9488" }} activeDot={{ r: 7 }} />
+                      <Area type="monotone" dataKey="Ward SpO2 %" stroke="#10b981" strokeWidth={2} fill="url(#nurseSpo2)" unit="%" isAnimationActive={false} dot={{ r: 4, strokeWidth: 2, fill: "#10b981" }} activeDot={{ r: 7 }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>

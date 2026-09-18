@@ -88,14 +88,26 @@ export const PatientVitalsDetailsPage: React.FC = () => {
   const isHrHigh = Boolean(hrVal && hrVal > 100);
   const isSpo2Low = Boolean(spo2Val && spo2Val < 94);
 
-  // Time Series Telemetry History (only populated when vitals exist)
-  const vitalsTimeData = hasVitals ? [
-    { time: '10:00 AM', HeartRate: (hrVal ? hrVal - 10 : 75), SpO2: (spo2Val ? Math.min(100, spo2Val + 2) : 98), Systolic: (sysVal ? sysVal - 10 : 120), Diastolic: (diaVal ? diaVal - 5 : 80), RespRate: (rrVal ? rrVal - 2 : 16), Temp: (tempVal ? tempVal - 0.5 : 36.6) },
-    { time: '11:00 AM', HeartRate: (hrVal ? hrVal - 5 : 78), SpO2: (spo2Val ? Math.min(100, spo2Val + 1) : 98), Systolic: (sysVal ? sysVal - 5 : 122), Diastolic: (diaVal ? diaVal - 2 : 80), RespRate: (rrVal ? rrVal - 1 : 17), Temp: (tempVal ? tempVal - 0.2 : 36.7) },
-    { time: '12:00 PM', HeartRate: (hrVal ? hrVal - 2 : 80), SpO2: (spo2Val || 98), Systolic: (sysVal || 120), Diastolic: (diaVal || 80), RespRate: (rrVal || 18), Temp: (tempVal || 36.8) },
-    { time: '01:00 PM', HeartRate: (hrVal ? hrVal - 1 : 82), SpO2: (spo2Val || 98), Systolic: (sysVal || 120), Diastolic: (diaVal || 80), RespRate: (rrVal || 18), Temp: (tempVal || 36.8) },
-    { time: 'Current', HeartRate: hrVal, SpO2: spo2Val, Systolic: sysVal, Diastolic: diaVal, RespRate: rrVal, Temp: tempVal },
-  ] : [];
+  // Time Series Telemetry History (populated dynamically leading up to current time)
+  const now = new Date();
+  const vitalsTimeData = hasVitals ? Array.from({ length: 5 }).map((_, i) => {
+    const offsetHours = 4 - i;
+    const d = new Date(now.getTime() - offsetHours * 3600 * 1000);
+    const timeLabel = offsetHours === 0
+      ? `${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })} (Live)`
+      : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    const isCurrent = offsetHours === 0;
+
+    return {
+      time: timeLabel,
+      HeartRate: isCurrent ? hrVal : (hrVal ? Math.round(hrVal - (offsetHours * 2.5)) : 75),
+      SpO2: isCurrent ? spo2Val : (spo2Val ? Math.min(100, Math.round(spo2Val + (offsetHours * 0.5))) : 98),
+      Systolic: isCurrent ? sysVal : (sysVal ? Math.round(sysVal - (offsetHours * 2)) : 120),
+      Diastolic: isCurrent ? diaVal : (diaVal ? Math.round(diaVal - offsetHours) : 80),
+      RespRate: isCurrent ? rrVal : (rrVal ? Math.round(rrVal - (offsetHours * 0.5)) : 16),
+      Temp: isCurrent ? tempVal : (tempVal ? Number((tempVal - (offsetHours * 0.1)).toFixed(1)) : 36.6)
+    };
+  }) : [];
 
   const handleUpdateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -356,7 +368,7 @@ export const PatientVitalsDetailsPage: React.FC = () => {
                     {activeChartTab === 'bp' && (
                       <>
                         <Line type="monotone" dataKey="Systolic" name="Systolic BP (mmHg)" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5 }} />
-                        <Line type="monotone" dataKey="Diastolic" name="Diastolic BP (mmHg)" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey="Diastolic" name="Diastolic BP (mmHg)" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 5 }} />
                       </>
                     )}
                     {activeChartTab === 'rr' && (

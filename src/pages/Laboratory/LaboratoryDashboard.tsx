@@ -254,19 +254,23 @@ export const LaboratoryDashboard: React.FC = () => {
                 </div>
 
                 <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
-                  {labResults.slice(-8).reverse().map((l) => (
-                    <div key={l.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs flex justify-between items-center">
-                      <div>
-                        <div className="font-bold text-slate-900">{l.testName}: <span className="text-teal-700 font-black">{l.value} {l.unit}</span></div>
-                        <div className="text-[10px] text-gray-500">
-                          Ref ({l.referenceLow}-{l.referenceHigh}) • {l.patientId}
+                  {labResults
+                    .filter((l) => patients.some((p) => p.id === l.patientId || p.hospitalId === l.patientId))
+                    .slice(-8)
+                    .reverse()
+                    .map((l) => (
+                      <div key={l.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-slate-900">{l.testName}: <span className="text-teal-700 font-black">{l.value} {l.unit}</span></div>
+                          <div className="text-[10px] text-gray-500">
+                            Ref ({l.referenceLow}-{l.referenceHigh}) • {l.patientId}
+                          </div>
                         </div>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
+                          {l.verificationStatus}
+                        </span>
                       </div>
-                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
-                        {l.verificationStatus}
-                      </span>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             </div>

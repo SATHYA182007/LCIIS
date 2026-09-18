@@ -47,6 +47,8 @@ import {
   clearAllAlertsFromDB as firebaseClearAllAlertsFromDB,
   updateDeviceStatus as firebaseUpdateDeviceStatus,
   seedInitialDatabaseIfEmpty,
+  ensureMockPatientsExist,
+  triggerNurseWatchAlert,
   purgeUnlinkedVitalsFromRTDB
 } from '../services/firebaseService';
 
@@ -110,6 +112,7 @@ interface RealtimeContextType {
   addIntervention: (intervention: Omit<InterventionRecord, 'id' | 'timestamp'>) => void;
   processStockMovement: (itemId: string, qty: number, type: StockMovement['type'], performedBy: string, reason: string) => void;
   updateDeviceStatus: (deviceId: string, status: DeviceRecord['connectionStatus']) => void;
+  triggerWatchAlert: (patientId: string, alertType?: 'SOS' | 'CRITICAL' | 'ALERT' | 'NORMAL') => Promise<void>;
 }
 
 const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined);
@@ -187,8 +190,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsLoadingFirebase(true);
         setFirebaseError(null);
 
-        // Seed default structure if empty and purge residual mock vitals for unlinked patients
+        // Seed default structure if empty, ensure mock patients, and purge unlinked vitals
         await seedInitialDatabaseIfEmpty();
+        await ensureMockPatientsExist();
         await purgeUnlinkedVitalsFromRTDB();
 
         // 1. Subscribe to Patients
@@ -742,6 +746,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addIntervention,
         processStockMovement,
         updateDeviceStatus,
+        triggerWatchAlert: triggerNurseWatchAlert,
       }}
     >
       {children}

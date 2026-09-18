@@ -16,9 +16,10 @@ export const LaboratoryResultsPage: React.FC = () => {
 
   const filteredResults = labResults.filter((l) => {
     const p = getPatientById(l.patientId);
+    if (!p) return false;
     const matchesSearch =
       l.testName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       l.patientId.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'ALL' || l.category === selectedCategory;
     return matchesSearch && matchesCategory;
