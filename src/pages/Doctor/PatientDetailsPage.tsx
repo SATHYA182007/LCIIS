@@ -316,7 +316,7 @@ export const PatientDetailsPage: React.FC = () => {
           {activeMainTab === 'ehr_history' ? (
             <CentralizedPatientHistoryCard patientId={patient.id} />
           ) : (
-            <>
+            <React.Fragment>
               {/* WHAT HAS CHANGED? Centerpiece */}
               <WhatChangedCard
             patient={patient}
@@ -605,7 +605,7 @@ export const PatientDetailsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </>
+            </React.Fragment>
           )}
         </main>
       </div>
